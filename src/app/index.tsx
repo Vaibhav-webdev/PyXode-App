@@ -1,20 +1,21 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useAuth } from "@clerk/expo";
+import { Redirect } from "expo-router";
+import { View, ActivityIndicator } from "react-native";
 
-export default function Tab() {
-  return (
-    <View style={styles.container}>
-      <Text>Tab [Home]</Text>
-      <TouchableOpacity onPress={() => '/settings'}>
-        <Text>Go To Settings</Text>
-      </TouchableOpacity>
-    </View>
-  );
+export default function Index() {
+  const { isSignedIn, isLoaded } = useAuth();
+
+  if (!isLoaded) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
+
+  if (isSignedIn) {
+    return <Redirect href={"/(tabs)/home"} />;
+  }
+
+  return <Redirect href="/(auth)/sign-in" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
