@@ -1,14 +1,3 @@
-// HomeScreen.tsx
-// Post-signup Home screen — dark theme, snake-path Python learning roadmap,
-// Clerk-driven first name, and a tappable avatar with an SVG avatar picker.
-//
-// Required packages:
-//   npx expo install react-native-svg
-//   npm install lucide-react-native @react-native-async-storage/async-storage
-//   (Clerk already set up in your project: @clerk/clerk-expo)
-//
-// Drop this in app/(tabs)/index.tsx or wherever your Home route lives.
-
 import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
@@ -17,10 +6,10 @@ import {
   ScrollView,
   Pressable,
   Dimensions,
-  SafeAreaView,
   Modal,
 } from "react-native";
 import Svg, { Path, Circle, Rect } from "react-native-svg";
+import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUser } from "@clerk/clerk-expo";
 import {

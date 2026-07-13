@@ -106,14 +106,9 @@ export default function Page() {
       const { createdSessionId, setActive } = await startGoogleAuthenticationFlow();
       
       if (createdSessionId && setActive) {
-        // Session active set karo - iska matlab login successful ho gaya
         await setActive({ session: createdSessionId });
         alert("Google Login Successful!");
-        
-        // Yahan par navigation add kar sakte ho 
-        // Example: router.replace('/home');
       } else {
-        // Agar MFA ya koi aur step pending ho
         alert("Additional step required");
       }
     } catch (err) {
@@ -125,13 +120,13 @@ export default function Page() {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
             style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            // Android ke liye 'undefined' rakho, warna upar spacing aayegi
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
-            {/* ScrollView added to make the screen scrollable */}
             <ScrollView
-              showsVerticalScrollIndicator={false} // Yeh scroll bar hide karega
-              contentContainerStyle={styles.scrollContent} // Neeche styles mein isko define karenge
-              keyboardShouldPersistTaps="handled" // Yeh input field par tap karne par keyboard dismiss karega
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
             >
       {!showEmailCode ? (
         <>
@@ -250,6 +245,7 @@ export default function Page() {
       ) : (
         /* VERIFY EMAIL SCREEN */
         <>
+          {/* Back Button fix: position absolute hata diya */}
           <TouchableOpacity
             onPress={() => router.push("/")}
             style={styles.backButton}
@@ -311,19 +307,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#121212",
-    justifyContent: "center",
+    // justifyContent: "center", <--- YEH LINE HATA DO
     paddingHorizontal: 28,
     paddingTop: 30,
   },
    scrollContent: {
-    flexGrow: 1, // Is se content apni height according le sakta hai
-    paddingBottom: 20, // Neeche thoda space rakhne ke liye jab tak scroll karte end par
+    flexGrow: 1, 
+    justifyContent: "center", // <--- YAHAN ADD KAR DO
+    paddingBottom: 40, // Keyboard ke neeche space ke liye thoda badha diya
   },
+  // backButton se absolute position hata ke normal bana diya
   backButton: {
-    position: "absolute",
-    top: 48,
-    left: 20,
-    zIndex: 10,
+    marginBottom: 20, 
+    alignSelf: 'flex-start', 
   },
 
   // --- Logo & Branding ---
