@@ -9,9 +9,11 @@ import {
   Modal,
 } from "react-native";
 import Svg, { Path, Circle, Rect } from "react-native-svg";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "@clerk/expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useUser } from "@clerk/clerk-expo";
+import { useUser } from "@clerk/expo";
 import {
   LayoutGrid,
   Search,
@@ -190,9 +192,6 @@ const LESSONS: Lesson[] = [
   { number: "07", title: "Lists &\nTuples", icon: <List color={COLORS.white} size={26} />, progress: 0 },
   { number: "08", title: "Dictionaries", icon: <Braces color={COLORS.white} size={26} />, progress: 0 },
   { number: "09", title: "Exception\nHandling", icon: <AlertTriangle color={COLORS.white} size={26} />, progress: 0 },
-  { number: "10", title: "OOP\nBasics", icon: <Component color={COLORS.white} size={26} />, progress: 0, locked: true },
-  { number: "11", title: "Coming\nSoon", icon: <Lock color={COLORS.textTertiary} size={24} />, progress: 0, locked: true },
-  { number: "12", title: "Coming\nSoon", icon: <Lock color={COLORS.textTertiary} size={24} />, progress: 0, locked: true },
 ];
 
 // ---------------------------------------------------------------------------
@@ -233,8 +232,8 @@ const HorizontalConnector = () => (
 // Smooth vertical "S" loop linking the last card of one row to the first
 // card of the next, on whichever side the snake turns.
 const VerticalLoopConnector = ({ side }: { side: "left" | "right" }) => {
-  const w = 34;
-  const h = CARD_GAP + 6;
+  const w = 25;
+  const h = CARD_GAP + 10;
   const path =
     side === "right"
       ? `M4,0 C4,${h * 0.45} ${w - 6},${h * 0.2} ${w - 6},${h * 0.5} C${w - 6},${h * 0.8} 4,${h * 0.55} 4,${h}`
@@ -347,6 +346,8 @@ const AvatarPickerSheet = ({
 // ---------------------------------------------------------------------------
 export default function HomeScreen() {
   const { user } = useUser();
+  const router = useRouter()
+  const { signOut } = useAuth();
   const firstName = user?.firstName ?? "there";
 
   const [avatarId, setAvatarId] = useState<AvatarId>("girl1");
@@ -378,11 +379,21 @@ export default function HomeScreen() {
     return chunks;
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      // signOut ko call karein
+      await signOut();
+      router.push("/(auth)/sign-in")
+      console.log("User signed out successfully");
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  }
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ paddingBottom: 130 }}
+        contentContainerStyle={{ paddingBottom: 10 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -391,7 +402,7 @@ export default function HomeScreen() {
             <LayoutGrid color={COLORS.white} size={24} />
           </Pressable>
           <Text style={styles.headerTitle}>Python</Text>
-          <Pressable hitSlop={10}>
+          <Pressable onPress={handleLogout} hitSlop={10}>
             <Search color={COLORS.white} size={24} />
           </Pressable>
         </View>
@@ -449,25 +460,6 @@ export default function HomeScreen() {
           })}
         </View>
       </ScrollView>
-
-      {/* Floating bottom nav */}
-      <View style={styles.bottomNavWrap}>
-        <View style={styles.bottomNav}>
-          <Pressable style={styles.navItem} hitSlop={10}>
-            <Calendar color={COLORS.textSecondary} size={22} />
-          </Pressable>
-          <Pressable style={styles.navItem} hitSlop={10}>
-            <Star color={COLORS.textSecondary} size={22} />
-          </Pressable>
-          <View style={styles.navItemActive}>
-            <HomeIcon color={COLORS.white} size={22} />
-          </View>
-          <Pressable style={styles.navItem} hitSlop={10}>
-            <User color={COLORS.textSecondary} size={22} />
-          </Pressable>
-        </View>
-      </View>
-
       <AvatarPickerSheet
         visible={pickerVisible}
         selected={avatarId}
@@ -546,6 +538,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.cardBorder,
     backgroundColor: COLORS.card,
     padding: 12,
+    marginBottom: 20,
     justifyContent: "space-between",
   },
   cardLocked: { backgroundColor: COLORS.cardLocked, borderStyle: "dashed" },

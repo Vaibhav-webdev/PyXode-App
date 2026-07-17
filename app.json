@@ -30,13 +30,11 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#262626",
+          "backgroundColor": "#212121",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 120
         }
       ],
-      "@clerk/expo",
-      "expo-secure-store",
       "expo-web-browser",
       "expo-sqlite",
       "expo-image"
@@ -49,7 +47,9 @@
       "router": {},
       "eas": {
         "projectId": "ec37ce37-4306-4f00-b30e-cd6a94d6e746"
-      }
+      },
+      "EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID": "1033491632620-0lcdopc7r6pdp8a9ohd4t9nhuu078rto.apps.googleusercontent.com",
+      "EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID": "1033491632620-hd0hs4520vo3ok5iansno5fdocf22i3v.apps.googleusercontent.com"
     }
   }
 }
