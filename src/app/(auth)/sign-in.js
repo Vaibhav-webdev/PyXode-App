@@ -5,7 +5,6 @@ import { StyleSheet } from "react-native";
 import { Platform } from "react-native";
 import { Image } from "expo-image";
 import { ScrollView } from "react-native";
-import { useSignInWithGoogle } from "@clerk/expo/google";
 import React, { useState } from "react";
 import { Mail, Lock, Eye, Home } from "lucide-react-native";
 import {
@@ -18,9 +17,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AuthModal from "../../components/AuthModal"
+import GoogleSignInButton from "../../components/GoogleSignInButton"
 
 export default function Page() {
-  const { startGoogleAuthenticationFlow } = useSignInWithGoogle();
   const { signIn } = useSignIn()
   const router = useRouter()
 
@@ -108,22 +107,6 @@ export default function Page() {
 
     setLoading(false)
   }
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const { createdSessionId, setActive } = await startGoogleAuthenticationFlow();
-
-      if (createdSessionId && setActive) {
-        await setActive({ session: createdSessionId });
-        router.replace('/');
-      }
-    } catch (err) {
-      if (err.code === 'SIGN_IN_CANCELLED' || err.code === '-5') {
-        return;
-      }
-      console.log('Google sign-in error:', err);
-    }
-  };
   return (
 
     <SafeAreaView style={styles.container}>
@@ -231,10 +214,7 @@ export default function Page() {
             </View>
 
             {/* Google Button */}
-            <Pressable onPress={() => handleGoogleSignIn()} style={styles.googleButton}>
-              <Home size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.googleButtonText}>Continue with Google</Text>
-            </Pressable>
+            <GoogleSignInButton />
 
             {/* Footer */}
             <View style={styles.footerContainer}>

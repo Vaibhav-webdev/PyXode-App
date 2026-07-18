@@ -1,13 +1,14 @@
 import { useSignInWithGoogle } from '@clerk/expo/google'
 import { useRouter } from 'expo-router'
-import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Home } from 'lucide-react-native'
+import { Alert, Platform, StyleSheet, Text, TouchableOpacity } from 'react-native'
 
 interface GoogleSignInButtonProps {
   onSignInComplete?: () => void
   showDivider?: boolean
 }
 
-export function GoogleSignInButton({
+export default function GoogleSignInButton({
   onSignInComplete,
   showDivider = true,
 }: GoogleSignInButtonProps) {
@@ -29,7 +30,7 @@ export function GoogleSignInButton({
         if (onSignInComplete) {
           onSignInComplete()
         } else {
-          router.replace('/')
+          router.replace('/(tabs)/home')
         }
       }
     } catch (err: any) {
@@ -44,38 +45,36 @@ export function GoogleSignInButton({
 
   return (
     <>
-      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+      <TouchableOpacity onPress={() => handleGoogleSignIn()} style={styles.googleButton}>
+        <Home size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+        <Text style={styles.googleButtonText}>Continue with Google</Text>
       </TouchableOpacity>
-
-      {showDivider && (
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.dividerLine} />
-        </View>
-      )}
     </>
   )
 }
 
 const styles = StyleSheet.create({
-  googleButton: {
-    backgroundColor: '#4285F4',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  googleButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 20,
+  },
+  googleButton: {
+    flexDirection: "row",
+    width: "100%",
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "#333333",
+    marginBottom: 30,
+  },
+  googleButtonText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "500",
   },
   dividerLine: {
     flex: 1,
