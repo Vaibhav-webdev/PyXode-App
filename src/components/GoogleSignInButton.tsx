@@ -1,6 +1,6 @@
 import { useSignInWithGoogle } from '@clerk/expo/google'
 import { useRouter } from 'expo-router'
-import { Home } from 'lucide-react-native'
+import { FontAwesome } from '@expo/vector-icons';
 import { Alert, Platform, StyleSheet, Text, TouchableOpacity } from 'react-native'
 
 interface GoogleSignInButtonProps {
@@ -46,7 +46,7 @@ export default function GoogleSignInButton({
   return (
     <>
       <TouchableOpacity onPress={() => handleGoogleSignIn()} style={styles.googleButton}>
-        <Home size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+        <FontAwesome name="google" size={20} color="#ffffff" />
         <Text style={styles.googleButtonText}>Continue with Google</Text>
       </TouchableOpacity>
     </>
@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingVertical: 16,
     borderRadius: 14,
+    gap: 9,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "transparent",

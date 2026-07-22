@@ -1,5 +1,11 @@
-import React from "react";
-import { View, Text, TextInput, StyleSheet, Platform } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Platform,
+} from "react-native";
 import { tokenizePython, TOKEN_COLORS } from "@/utils/pythonHighlighter";
 
 type Props = {
@@ -8,104 +14,162 @@ type Props = {
   editable?: boolean;
   minHeight?: number;
   placeholder?: string;
-  showPreview?: boolean; // hide the highlighted preview panel (used in the full-screen playground)
-  fill?: boolean; // let the input grow to fill all available vertical space
+  fill?: boolean; // grow to fill all available vertical space (playground mode)
 };
 
-// Two simple, independent layers instead of a fragile transparent-text
-// overlay (which rendered inconsistently across iOS/Android and let the
-// device's own black input text show through). The learner types normally
-// in a plain input, and a live "Preview" panel below shows the exact same
-// text with Python syntax highlighting applied as they type.
 export default function PythonCodeEditor({
   value,
   onChangeText,
   editable = true,
   minHeight = 90,
   placeholder = "# Write your Python code here",
-  showPreview = true,
   fill = false,
 }: Props) {
   const tokens = tokenizePython(value);
 
+  // When long content makes the TextInput scroll internally, we apply
+  // the same vertical offset to the highlight layer so both stay in sync.
+  const [scrollY, setScrollY] = useState(0);
+
   return (
     <View style={fill ? styles.fillWrapper : undefined}>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        editable={editable}
-        multiline
-        autoCapitalize="none"
-        autoCorrect={false}
-        spellCheck={false}
-        autoComplete="off"
-        // Forces a plain ASCII keyboard on iOS so smart/curly quotes don't
-        // get auto-inserted and silently break exact-match comparisons.
-        keyboardType={Platform.OS === "ios" ? "ascii-capable" : "default"}
-        placeholder={placeholder}
-        placeholderTextColor="#5C5C60"
-        selectionColor="#FFFFFF"
-        textAlignVertical="top"
+      {/*
+        ┌──────────────────────────────────────────┐
+        │  Two-layer stack inside one rounded box   │
+        │                                           │
+        │  zIndex 0 ─ coloured <Text> (behind)      │
+        │  zIndex 1 ─ transparent <TextInput>       │
+        │            (on top — touch + cursor)      │
+        │                                           │
+        │  Learner sees ONLY the coloured tokens.   │
+        │  Native black text is invisible because   │
+        │  TextInput.color = transparent.           │
+        └──────────────────────────────────────────┘
+      */}
+      <View
         style={[
-          styles.mono,
-          styles.input,
-          fill ? styles.inputFill : { minHeight },
-          !editable && styles.inputLocked,
+          styles.editorBox,
+          fill ? styles.editorBoxFill : { minHeight },
+          !editable && styles.locked,
         ]}
-      />
-
-      {showPreview && (
-        <View style={styles.previewWrapper}>
-          <Text style={styles.previewLabel}>Preview</Text>
+      >
+        {/* ── Layer 0: Syntax-highlighted tokens (BEHIND) ── */}
+        <View
+          style={[
+            styles.highlightLayer,
+            { transform: [{ translateY: -scrollY }] },
+          ]}
+          pointerEvents="none"
+        >
           <Text style={styles.mono}>
-            {value.length === 0 ? (
-              <Text style={styles.previewPlaceholder}>Your highlighted code appears here as you type</Text>
-            ) : (
-              tokens.map((t, i) => (
-                <Text key={i} style={{ color: TOKEN_COLORS[t.type] }}>
-                  {t.text}
-                </Text>
-              ))
-            )}
+            {value.length === 0
+              ? null
+              : tokens.map((tok, i) => (
+                  <Text
+                    key={i}
+                    style={{ color: TOKEN_COLORS[tok.type] || "#FFFFFF" }}
+                  >
+                    {tok.text}
+                  </Text>
+                ))}
+            {/* Extra newline matches TextInput's trailing blank line
+                so both layers have the same total height. */}
+            {"\n"}
           </Text>
         </View>
-      )}
+
+        {/* ── Layer 1: Transparent TextInput (ON TOP) ── */}
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          editable={editable}
+          multiline
+          autoCapitalize="none"
+          autoCorrect={false}
+          spellCheck={false}
+          autoComplete="off"
+          // ASCII keyboard on iOS prevents smart/curly quotes that
+          // silently break exact-match comparisons.
+          keyboardType={Platform.OS === "ios" ? "ascii-capable" : "default"}
+          placeholder={placeholder}
+          placeholderTextColor="#5C5C60"
+          selectionColor="rgba(86,182,194,0.5)"
+          textAlignVertical="top"
+          onScroll={(e) => setScrollY(e.nativeEvent.contentOffset.y)}
+          style={[
+            styles.mono,
+            styles.transparentInput,
+            fill && styles.inputFill,
+          ]}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   mono: {
-    fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }),
+    fontFamily: Platform.select({
+      ios: "Menlo",
+      android: "monospace",
+      default: "monospace",
+    }),
     fontSize: 14,
     lineHeight: 21,
   },
-  input: {
+
+  /* ── Outer containers ── */
+
+  fillWrapper: { flex: 1 },
+
+  // The box provides background, border, padding — both inner layers
+  // inherit the same content area so their text aligns pixel-perfect.
+  editorBox: {
+    position: "relative",
     backgroundColor: "#0D0D0D",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#262626",
     padding: 14,
-    color: "#FFFFFF",
+    overflow: "hidden", // clips highlight layer when scrolled
   },
-  inputLocked: { opacity: 0.6 },
-  fillWrapper: { flex: 1 },
-  inputFill: { flex: 1 },
-  previewWrapper: {
-    marginTop: 10,
-    backgroundColor: "#0D0D0D",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#1C1C1E",
+  editorBoxFill: { flex: 1 },
+
+  locked: { opacity: 0.6 },
+
+  /* ── Layer 0: Highlight ── */
+
+  // absoluteFillObject positions inside the parent's padding-box
+  // (inside the border). Adding padding:14 here means the token text
+  // starts at exactly the same offset as the TextInput's text (which
+  // is also inset 14px by the parent's padding).
+  highlightLayer: {
     padding: 14,
+    zIndex: 0,
   },
-  previewLabel: {
-    color: "#5C5C60",
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    marginBottom: 6,
-    textTransform: "uppercase",
+
+  /* ── Layer 1: Transparent Input ── */
+
+  // Sits on top (zIndex 1) so the cursor, selection handles, and
+  // all touch/tap events work normally. The editorBox already
+  // provides background + border + padding, so the TextInput itself
+  // sets all of those to zero to avoid doubling up.
+  transparentInput: {
+    position: "relative",
+    zIndex: 1,
+    color: Platform.select({
+      ios: "transparent",
+      // rgba(0,0,0,0) is more reliable than the keyword "transparent"
+      // on some older Android RN builds where the keyword leaked
+      // visible black text through.
+      android: "rgba(0,0,0,0)",
+      default: "transparent",
+    }),
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    borderColor: "transparent",
+    padding: 0,
+    borderRadius: 0,
   },
-  previewPlaceholder: { color: "#5C5C60", fontFamily: "monospace" },
+  inputFill: { flex: 1 },
 });

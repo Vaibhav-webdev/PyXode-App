@@ -2,7 +2,7 @@
 // Shared types used across all topic data files
 // ---------------------------------------------------------------------------
 
-export type TabKey = "basic" | "machineLearning" | "dataScience" | "webDev" | "appDev" | "dsa" | "automationScripting";
+export type TabKey = "basic" | "machineLearning" | "dataScience" | "webDev" | "dsa" | "automationScripting";
 
 export type TabDef = {
   key: TabKey;
@@ -16,6 +16,7 @@ export type IconKey =
   | "code2"
   | "list"
   | "box"
+   | "brain-circuit" | "trending-up" | "git-fork" | "group" | "filter" | "gauge"
   | "braces"
   | "alertTriangle"
   | "sparkles"

@@ -385,7 +385,7 @@ const AvatarSVG = ({ id, size = 150 }: { id: string; size?: number }) => {
                                 <Use xlinkHref="#c" />
                             </Mask>
                             <Use xlinkHref="#c" fill="#E6E6E6" />
-                            <G fill="#FFDEB5" mask="url(#d)">
+                            <G fill="#ffb5b5" mask="url(#d)">
                                 <Path d="M0 0h264v110H0z" />
                             </G>
                             <Path

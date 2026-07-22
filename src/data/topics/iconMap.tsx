@@ -6,6 +6,12 @@ import {
   BookOpen,
   Box,
   Boxes,
+  BrainCircuit,
+  TrendingUp,
+  GitFork,
+  Group,
+  Filter,
+  Gauge,
   Braces,
   Calculator,
   CodeXml,
@@ -123,7 +129,7 @@ export const getTopicIcon = (key: IconKey) => {
       return <InfinityIcon color={COLOR} size={SIZE} />;
         case "monitor":
       return <Monitor color={COLOR} size={SIZE} />;
-    case "globe":
+      case "globe":
       return <Globe color={COLOR} size={SIZE} />;
     case "sheet":
       return <Sheet color={COLOR} size={SIZE} />;
@@ -187,7 +193,19 @@ export const getTopicIcon = (key: IconKey) => {
       return <MoveRight color={COLOR} size={SIZE} />;
     case "database":
       return <Database color={COLOR} size={SIZE} />;
-    case "trash-2":
+    case "brain-circuit":
+      return <BrainCircuit color={COLOR} size={SIZE} />;
+    case "trending-up":
+      return <TrendingUp color={COLOR} size={SIZE} />;
+    case "git-fork":
+      return <GitFork color={COLOR} size={SIZE} />;
+    case "group":
+      return <Group color={COLOR} size={SIZE} />;
+    case "filter":
+      return <Filter color={COLOR} size={SIZE} />;
+    case "gauge":
+      return <Gauge color={COLOR} size={SIZE} />;
+      case "trash-2":
       return <Trash2 color={COLOR} size={SIZE} />;
       
     default:

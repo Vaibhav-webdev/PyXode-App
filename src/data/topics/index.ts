@@ -14,7 +14,6 @@ export const TABS: TabDef[] = [
   { key: "machineLearning", label: "Machine Learning" },
   { key: "dataScience", label: "Data Science" },
   { key: "webDev", label: "Web Development" },
-  { key: "appDev", label: "App Development" },
 ];
 
 export const TOPICS_BY_TAB: Record<TabKey, TopicContent[]> = {
@@ -24,7 +23,6 @@ export const TOPICS_BY_TAB: Record<TabKey, TopicContent[]> = {
   dsa: DSA_TOPICS,
   dataScience: DATA_SCIENCE_TOPICS,
   webDev: WEB_DEV_TOPICS,
-  appDev: APP_DEV_TOPICS,
 };
 
 export const ALL_TOPICS: TopicContent[] = Object.values(TOPICS_BY_TAB).flat();
