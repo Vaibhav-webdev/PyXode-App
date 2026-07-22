@@ -7,8 +7,15 @@ export default function Index() {
 
   if (!isLoaded) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#000" />
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#1a1a1a'
+        }}
+      >
+        <ActivityIndicator size="large" color="#ffffff" />
       </View>
     );
   }
