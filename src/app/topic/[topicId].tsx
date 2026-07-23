@@ -1,22 +1,21 @@
-import React, { useEffect, useRef, useState } from "react";
 import ResultScreen from "@/components/CompletionReward";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  Dimensions,
-  Animated,
-  Easing,
-} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { ArrowRight, X } from "lucide-react-native";
+import { useEffect, useState } from "react";
+import {
+  Dimensions,
+  Pressable,
+  StyleSheet,
+  Text,
+  View
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { X, ArrowRight, RotateCcw, Trophy, Star } from "lucide-react-native";
-
-import { getTopicById } from "@/data/topics";
-import { saveTopicResult } from "@/utils/progressStorage";
-import { isCodeAnswerCorrect } from "@/utils/normalizeCode";
+import { SoundManager } from "@/hooks/SoundManager";
 import PythonCodeEditor from "@/components/PythonCodeEditor";
+import { getTopicById } from "@/data/topics";
+import { isCodeAnswerCorrect } from "@/utils/normalizeCode";
+import { saveTopicResult } from "@/utils/progressStorage";
+
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -88,7 +87,8 @@ export default function TopicScreen() {
     }
   }, [stage, quizIndex]);
 
-  const handleNextSlide = () => {
+  const handleNextSlide = async () => {
+    await SoundManager.play('next');
     if (slideIndex < totalSlides - 1) {
       setSlideIndex((i) => i + 1);
     } else {
@@ -111,13 +111,15 @@ export default function TopicScreen() {
     if (isCorrect) setCorrectCount((c) => c + 1);
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
+    await SoundManager.play('next');
     setSelectedOption(null);
     setAnsweredCorrectly(null);
     if (quizIndex < totalQuestions - 1) {
       setQuizIndex((i) => i + 1);
     } else {
       setStage("result");
+      await SoundManager.play('celebrate');
     }
   };
 

@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-
+import { SoundManager } from "@/hooks/SoundManager";
 import { TabKey, TABS, TopicContent, TOPICS_BY_TAB } from "@/data/topics";
 import { getTopicIcon } from "@/data/topics/iconMap";
 import { getAllProgress, TopicProgress } from "@/utils/progressStorage";
@@ -172,7 +172,10 @@ const SnakeRow = ({
                 topic={topic}
                 progress={progress}
                 locked={locked}
-                onPress={() => onOpenTopic(topic, locked)}
+                onPress={async () => {
+                  await SoundManager.play('click');
+                  onOpenTopic(topic, locked)
+                }}
               />
               {idx < ordered.length - 1 && <HorizontalConnector />}
             </React.Fragment>
@@ -305,7 +308,10 @@ export default function HomeScreen() {
               Let's continue your learning{"\n"}journey in Python.
             </Text>
           </View>
-          <Pressable onPress={() => setPickerVisible(true)} style={styles.avatarPressable}>
+          <Pressable onPress={async () => {
+            await SoundManager.play('click');
+            setPickerVisible(true)
+          }} style={styles.avatarPressable}>
             <AvatarSVG id={avatarId} size={68} />
           </Pressable>
         </View>
@@ -322,7 +328,10 @@ export default function HomeScreen() {
               <Pressable
                 key={tab.key}
                 style={[styles.segmentPill, isActive && styles.segmentPillActive]}
-                onPress={() => setActiveTab(tab.key)}
+                onPress={async () => {
+                  await SoundManager.play('click');
+                  setActiveTab(tab.key)
+                }}
               >
                 <Text style={isActive ? styles.segmentTextActive : styles.segmentText}>
                   {tab.label}

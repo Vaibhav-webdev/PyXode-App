@@ -18,6 +18,7 @@ import { useAuth } from '@clerk/expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { SoundManager } from '@/hooks/SoundManager';
 
 // Aapka diya hua Color Schema
 const COLORS = {
@@ -84,6 +85,7 @@ const SettingsScreen = () => {
   };
 
   const handleLogout = async () => {
+    await SoundManager.play('click');
     try {
       await signOut();
       router.push("/(auth)/sign-in");
@@ -105,6 +107,7 @@ const SettingsScreen = () => {
 
   // 1. Gallery se image pick karke Clerk par upload karne ka function
   const pickAndUploadImage = async () => {
+    await SoundManager.play('click');
     try {
       // Permission maango (agar pehle se na di ho)
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -177,7 +180,10 @@ const SettingsScreen = () => {
           {/* Top Right Edit Button */}
           <TouchableOpacity
             style={styles.editButton}
-            onPress={() => setIsEditModalVisible(true)}
+            onPress={async () => {
+              await SoundManager.play('click');
+              setIsEditModalVisible(true)
+            }}
           >
             <Ionicons name="create-outline" size={20} color={COLORS.white} />
           </TouchableOpacity>
@@ -279,54 +285,54 @@ const SettingsScreen = () => {
           </View>
         </Modal>
 
-{/* STATUS MODAL (Success / Error) */}
-<Modal
-  animationType="fade"
-  transparent={true}
-  visible={isStatusModalVisible}
-  onRequestClose={() => setIsStatusModalVisible(false)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.statusModalContent}>
-      
-      {/* Icon */}
-      <View style={[
-        styles.statusIconCircle,
-        { backgroundColor: statusType === 'success' ? '#1C1C1E' : '#1C1C1E' } // Same bg, color se differentiate karenge
-      ]}>
-        <Ionicons 
-          name={statusType === 'success' ? 'checkmark' : 'close'} 
-          size={32} 
-          color={statusType === 'success' ? '#34C759' : '#FF453A'} // Green for success, Red for error
-        />
-      </View>
+        {/* STATUS MODAL (Success / Error) */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={isStatusModalVisible}
+          onRequestClose={() => setIsStatusModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.statusModalContent}>
 
-      <Text style={styles.statusTitle}>
-        {statusType === 'success' ? 'Success!' : 'Oops!'}
-      </Text>
-      
-      <Text style={styles.statusMessage}>
-        {statusMessage}
-      </Text>
+              {/* Icon */}
+              <View style={[
+                styles.statusIconCircle,
+                { backgroundColor: statusType === 'success' ? '#1C1C1E' : '#1C1C1E' } // Same bg, color se differentiate karenge
+              ]}>
+                <Ionicons
+                  name={statusType === 'success' ? 'checkmark' : 'close'}
+                  size={32}
+                  color={statusType === 'success' ? '#34C759' : '#FF453A'} // Green for success, Red for error
+                />
+              </View>
 
-      <TouchableOpacity 
-        style={[
-          styles.statusButton,
-          { backgroundColor: statusType === 'success' ? COLORS.white : '#FF453A' }
-        ]} 
-        onPress={() => setIsStatusModalVisible(false)}
-      >
-        <Text style={[
-          styles.statusButtonText,
-          { color: statusType === 'success' ? COLORS.bg : COLORS.white }
-        ]}>
-          {statusType === 'success' ? 'Done' : 'Try Again'}
-        </Text>
-      </TouchableOpacity>
+              <Text style={styles.statusTitle}>
+                {statusType === 'success' ? 'Success!' : 'Oops!'}
+              </Text>
 
-    </View>
-  </View>
-</Modal>
+              <Text style={styles.statusMessage}>
+                {statusMessage}
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.statusButton,
+                  { backgroundColor: statusType === 'success' ? COLORS.white : '#FF453A' }
+                ]}
+                onPress={() => setIsStatusModalVisible(false)}
+              >
+                <Text style={[
+                  styles.statusButtonText,
+                  { color: statusType === 'success' ? COLORS.bg : COLORS.white }
+                ]}>
+                  {statusType === 'success' ? 'Done' : 'Try Again'}
+                </Text>
+              </TouchableOpacity>
+
+            </View>
+          </View>
+        </Modal>
 
         {/* PREFERENCES SECTION */}
         <Text style={styles.sectionTitle}>PREFERENCES</Text>
@@ -341,7 +347,10 @@ const SettingsScreen = () => {
               trackColor={{ false: COLORS.track, true: COLORS.fillBar }}
               thumbColor={COLORS.bg}
               ios_backgroundColor={COLORS.track}
-              onValueChange={(value) => toggleSwitch('notificationsEnabled', value)}
+              onValueChange={async (value) => {
+                await SoundManager.play('click');
+                toggleSwitch('notificationsEnabled', value)
+              }}
               value={notificationsEnabled}
             />
           </View>
@@ -356,7 +365,10 @@ const SettingsScreen = () => {
               trackColor={{ false: COLORS.track, true: COLORS.fillBar }}
               thumbColor={COLORS.bg}
               ios_backgroundColor={COLORS.track}
-              onValueChange={(value) => toggleSwitch('soundEnabled', value)}
+              onValueChange={async (value) => {
+                await SoundManager.play('click');
+                toggleSwitch('soundEnabled', value)
+              }}
               value={soundEnabled}
             />
           </View>
@@ -371,7 +383,10 @@ const SettingsScreen = () => {
               trackColor={{ false: COLORS.track, true: COLORS.fillBar }}
               thumbColor={COLORS.bg}
               ios_backgroundColor={COLORS.track}
-              onValueChange={(value) => toggleSwitch('vibrationEnabled', value)}
+              onValueChange={async (value) => {
+                await SoundManager.play('click');
+                toggleSwitch('vibrationEnabled', value)
+              }}
               value={vibrationEnabled}
             />
           </View>
@@ -515,49 +530,49 @@ const styles = StyleSheet.create({
     borderColor: "#ffffff34",
   },
   // Status Modal Styles
-statusModalContent: {
-  width: '80%',
-  backgroundColor: COLORS.card, // #131313
-  borderRadius: 20,
-  padding: 25,
-  alignItems: 'center',
-  borderWidth: 1,
-  borderColor: COLORS.cardBorder, // #262626
-},
-statusIconCircle: {
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginBottom: 15,
-  borderWidth: 1,
-  borderColor: COLORS.line,
-},
-statusTitle: {
-  fontSize: 20,
-  fontWeight: 'bold',
-  color: COLORS.white,
-  marginBottom: 8,
-},
-statusMessage: {
-  fontSize: 15,
-  color: COLORS.textSecondary,
-  textAlign: 'center',
-  marginBottom: 25,
-  lineHeight: 22,
-},
-statusButton: {
-  width: '100%',
-  paddingVertical: 14,
-  borderRadius: 12,
-  alignItems: 'center',
-  justifyContent: 'center',
-},
-statusButtonText: {
-  fontSize: 16,
-  fontWeight: 'bold',
-},
+  statusModalContent: {
+    width: '80%',
+    backgroundColor: COLORS.card, // #131313
+    borderRadius: 20,
+    padding: 25,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder, // #262626
+  },
+  statusIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  statusTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.white,
+    marginBottom: 8,
+  },
+  statusMessage: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: 25,
+    lineHeight: 22,
+  },
+  statusButton: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   listItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',

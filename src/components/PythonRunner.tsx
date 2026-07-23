@@ -59,6 +59,9 @@ const RUNNER_HTML = `
       var r = pendingResolve;
       pendingResolve = null;
       outputBuffer += text + "\\n";
+      // Echo the typed value immediately so the sheet shows it without
+      // waiting for the script's next print() call.
+      post({ stream: true, output: outputBuffer });
       r(text);
     }
   };

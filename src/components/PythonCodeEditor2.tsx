@@ -1,12 +1,6 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  Platform,
-} from "react-native";
-import { tokenizePython, TOKEN_COLORS } from "@/utils/pythonHighlighter";
+import React, { useCallback, useState } from "react";
+import { View, Text, StyleSheet, Platform, LayoutChangeEvent } from "react-native";
+import CodeEditor, { CodeEditorSyntaxStyles } from "@rivascva/react-native-code-editor";
 
 type Props = {
   value: string;
@@ -15,7 +9,26 @@ type Props = {
   minHeight?: number;
   placeholder?: string;
   fill?: boolean; // grow to fill all available vertical space (playground mode)
+  // Bump this from the parent whenever you need the visible text forced
+  // back in sync with `value` — e.g. Reset / Clear buttons. The library
+  // manages its own TextInput internally (uncontrolled), so a plain
+  // `value` change while the user is typing is intentionally IGNORED —
+  // that's what stops the "type here, text lands there" bug. Only a
+  // resetToken bump forces a clean remount.
+  resetToken?: number;
 };
+
+// Keeping fontSize / both line-heights identical (and an explicit mono
+// font on both platforms) is what fixes the classic cursor-drift issue
+// with this library — see github.com/RivasCVA/react-native-code-editor
+// issue #1. Do not let these three values diverge.
+const FONT_SIZE = 14;
+const LINE_HEIGHT = 21;
+const MONO_FONT = Platform.select({
+  ios: "Menlo-Regular",
+  android: "monospace",
+  default: "monospace",
+});
 
 export default function PythonCodeEditor({
   value,
@@ -24,83 +37,53 @@ export default function PythonCodeEditor({
   minHeight = 90,
   placeholder = "# Write your Python code here",
   fill = false,
+  resetToken = 0,
 }: Props) {
-  const tokens = tokenizePython(value);
+  const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
 
-  // When long content makes the TextInput scroll internally, we apply
-  // the same vertical offset to the highlight layer so both stay in sync.
-  const [scrollY, setScrollY] = useState(0);
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
+    const h = e.nativeEvent.layout.height;
+    if (h > 0) setMeasuredHeight(h);
+  }, []);
+
+  // Editable (playground) screens: only remount on an explicit resetToken
+  // bump, never on keystrokes — this is what keeps typing/cursor stable.
+  // Read-only (quiz/theory snippet) screens: remount whenever the snippet
+  // itself changes, since those are swapped wholesale, not typed into.
+  const editorKey = editable ? `edit-${resetToken}` : `view-${value}`;
+
+  const boxHeight = fill ? measuredHeight ?? minHeight : minHeight;
+  const showPlaceholder = editable && value.length === 0;
 
   return (
-    <View style={fill ? styles.fillWrapper : undefined}>
-      {/*
-        ┌──────────────────────────────────────────┐
-        │  Two-layer stack inside one rounded box   │
-        │                                           │
-        │  zIndex 0 ─ coloured <Text> (behind)      │
-        │  zIndex 1 ─ transparent <TextInput>       │
-        │            (on top — touch + cursor)      │
-        │                                           │
-        │  Learner sees ONLY the coloured tokens.   │
-        │  Native black text is invisible because   │
-        │  TextInput.color = transparent.           │
-        └──────────────────────────────────────────┘
-      */}
+    <View style={fill ? styles.fillWrapper : undefined} onLayout={fill ? onLayout : undefined}>
+      {showPlaceholder && <Text style={styles.placeholder}>{placeholder}</Text>}
+
       <View
         style={[
           styles.editorBox,
-          fill ? styles.editorBoxFill : { minHeight },
+          { height: boxHeight },
+          fill && styles.editorBoxFill,
           !editable && styles.locked,
         ]}
       >
-        {/* ── Layer 0: Syntax-highlighted tokens (BEHIND) ── */}
-        <View
-          style={[
-            styles.highlightLayer,
-            { transform: [{ translateY: -scrollY }] },
-          ]}
-          pointerEvents="none"
-        >
-          <Text style={styles.mono}>
-            {value.length === 0
-              ? null
-              : tokens.map((tok, i) => (
-                  <Text
-                    key={i}
-                    style={{ color: TOKEN_COLORS[tok.type] || "#FFFFFF" }}
-                  >
-                    {tok.text}
-                  </Text>
-                ))}
-            {/* Extra newline matches TextInput's trailing blank line
-                so both layers have the same total height. */}
-            {"\n"}
-          </Text>
-        </View>
-
-        {/* ── Layer 1: Transparent TextInput (ON TOP) ── */}
-        <TextInput
-          value={value}
-          onChangeText={onChangeText}
-          editable={editable}
-          multiline
-          autoCapitalize="none"
-          autoCorrect={false}
-          spellCheck={false}
-          autoComplete="off"
-          // ASCII keyboard on iOS prevents smart/curly quotes that
-          // silently break exact-match comparisons.
-          keyboardType={Platform.OS === "ios" ? "ascii-capable" : "default"}
-          placeholder={placeholder}
-          placeholderTextColor="#5C5C60"
-          selectionColor="rgba(86,182,194,0.5)"
-          textAlignVertical="top"
-          onScroll={(e) => setScrollY(e.nativeEvent.contentOffset.y)}
-          style={[
-            styles.mono,
-            styles.transparentInput,
-            fill && styles.inputFill,
-          ]}
+        <CodeEditor
+          key={editorKey}
+          initialValue={value}
+          onChange={onChangeText}
+          language="python"
+          syntaxStyle={CodeEditorSyntaxStyles.atomOneDark}
+          showLineNumbers
+          readOnly={!editable}
+          style={{
+            fontSize: FONT_SIZE,
+            fontFamily: MONO_FONT,
+            inputLineHeight: LINE_HEIGHT,
+            highlighterLineHeight: LINE_HEIGHT,
+            padding: 14,
+            backgroundColor: "#0D0D0D",
+            height: boxHeight,
+          }}
         />
       </View>
     </View>
@@ -108,68 +91,23 @@ export default function PythonCodeEditor({
 }
 
 const styles = StyleSheet.create({
-  mono: {
-    fontFamily: Platform.select({
-      ios: "Menlo",
-      android: "monospace",
-      default: "monospace",
-    }),
-    fontSize: 14,
-    lineHeight: 21,
-  },
-
-  /* ── Outer containers ── */
-
   fillWrapper: { flex: 1 },
 
-  // The box provides background, border, padding — both inner layers
-  // inherit the same content area so their text aligns pixel-perfect.
+  placeholder: {
+    color: "#5C5C60",
+    fontSize: 13,
+    marginBottom: 6,
+    fontFamily: MONO_FONT,
+  },
+
   editorBox: {
-    position: "relative",
-    backgroundColor: "#0D0D0D",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#262626",
-    padding: 14,
-    overflow: "hidden", // clips highlight layer when scrolled
+    overflow: "hidden",
+    backgroundColor: "#0D0D0D",
   },
   editorBoxFill: { flex: 1 },
 
   locked: { opacity: 0.6 },
-
-  /* ── Layer 0: Highlight ── */
-
-  // absoluteFillObject positions inside the parent's padding-box
-  // (inside the border). Adding padding:14 here means the token text
-  // starts at exactly the same offset as the TextInput's text (which
-  // is also inset 14px by the parent's padding).
-  highlightLayer: {
-    padding: 14,
-    zIndex: 0,
-  },
-
-  /* ── Layer 1: Transparent Input ── */
-
-  // Sits on top (zIndex 1) so the cursor, selection handles, and
-  // all touch/tap events work normally. The editorBox already
-  // provides background + border + padding, so the TextInput itself
-  // sets all of those to zero to avoid doubling up.
-  transparentInput: {
-    position: "relative",
-    zIndex: 1,
-    color: Platform.select({
-      ios: "transparent",
-      // rgba(0,0,0,0) is more reliable than the keyword "transparent"
-      // on some older Android RN builds where the keyword leaked
-      // visible black text through.
-      android: "rgba(0,0,0,0)",
-      default: "transparent",
-    }),
-    backgroundColor: "transparent",
-    borderWidth: 0,
-    borderColor: "transparent",
-    padding: 0,
-    borderRadius: 0,
-  },
-  inputFill: { flex: 1 },
 });
