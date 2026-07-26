@@ -1,23 +1,17 @@
 import { useAuth, useSignUp } from '@clerk/expo'
-import { Link, useRouter } from 'expo-router'
-import React from 'react'
-import { Image } from 'expo-image'
-import { ArrowLeft, User, Mail, Lock, Eye, Home, Check } from 'lucide-react-native'
-import { StatusBar } from 'react-native'
 import { useSignInWithGoogle } from '@clerk/expo/google'
-import { ScrollView } from 'react-native'
-import { StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Image } from 'expo-image'
+import { Link, useRouter } from 'expo-router'
+import { ArrowLeft, Check, Eye, Home, Lock, Mail, User } from 'lucide-react-native'
+import React from 'react'
 import {
-  View,
-  Text,
+  ActivityIndicator, Pressable, ScrollView, StatusBar, StyleSheet, Text,
   TextInput,
-  TouchableOpacity,
-  Pressable,
-  ActivityIndicator,
+  TouchableOpacity, View
 } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import AuthModal from '../../components/AuthModal'
+import { hp, wp } from '../../utils/wp_hp'
 
 export default function Page() {
   const { startGoogleAuthenticationFlow } = useSignInWithGoogle();
@@ -457,277 +451,277 @@ function RequirementRow({ met, label }) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#121212",
-    paddingHorizontal: 28,
-  },
-  scrollContent: {
-    flexGrow: 1, // Is se content apni height according le sakta hai
-    paddingBottom: 20, // Neeche thoda space rakhne ke liye jab tak scroll karte end par
-  },
-  backButton: {
-    position: "absolute",
-    top: 48,
-    left: 20,
-    zIndex: 10,
-  },
+      flex: 1,
+      backgroundColor: "#121212",
+      paddingHorizontal: wp(7),         // 28 -> ~7%
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: hp(2.5),           // 20 -> ~2.5%
+    },
+    backButton: {
+      position: "absolute",
+      top: hp(6),                       // 48 -> ~6%
+      left: wp(5),                      // 20 -> ~5%
+      zIndex: 10,
+    },
 
-  // --- Logo & Branding ---
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 24,
-    marginTop: 40,
-  },
-  logoPlaceholder1: {
-    width: 110,
-    height: 110,
-    borderRadius: 50,
-    backgroundColor: "#1A1A1A",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  logoPlaceholder: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: "#0e0e0e",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logoImage: {
-    width: 48,
-    height: 48,
-  },
-  brandName: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginBottom: 4,
-  },
-  tagline: {
-    fontSize: 14,
-    color: "#888888",
-    fontStyle: "italic",
-    textAlign: "center",
-  },
+    // --- Logo & Branding ---
+    logoContainer: {
+      alignItems: "center",
+      marginBottom: hp(3),              // 24 -> ~3%
+      marginTop: hp(5),                 // 40 -> ~5%
+    },
+    logoPlaceholder1: {
+      width: wp(27.5),                  // 110 -> ~27.5% (Circle)
+      height: wp(27.5),                 // 110 -> ~27.5%
+      borderRadius: wp(13.75),          // 50 -> Half of width for perfect circle
+      backgroundColor: "#1A1A1A",
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: hp(1.5),            // 12 -> ~1.5%
+    },
+    logoPlaceholder: {
+      width: wp(22.5),                  // 90 -> ~22.5% (Circle)
+      height: wp(22.5),                 // 90 -> ~22.5%
+      borderRadius: wp(11.25),          // 45 -> Half of width
+      backgroundColor: "#0e0e0e",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    logoImage: {
+      width: wp(12),                    // 48 -> ~12% (Square)
+      height: wp(12),                   // 48 -> ~12%
+    },
+    brandName: {
+      fontSize: wp(5.5),                // 22 -> ~5.5%
+      fontWeight: "bold",
+      color: "#FFFFFF",
+      marginBottom: hp(0.5),            // 4 -> ~0.5%
+    },
+    tagline: {
+      fontSize: wp(3.5),                // 14 -> ~3.5%
+      color: "#888888",
+      fontStyle: "italic",
+      textAlign: "center",
+    },
 
-  // --- Texts ---
-  sectionTitle: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginBottom: 6,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: "#A0A0A0",
-    marginBottom: 22,
-  },
-  mainTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 15,
-    color: "#A0A0A0",
-    textAlign: "center",
-    lineHeight: 22,
-  },
+    // --- Texts ---
+    sectionTitle: {
+      fontSize: wp(6.5),                // 26 -> ~6.5%
+      fontWeight: "bold",
+      color: "#FFFFFF",
+      marginBottom: hp(0.75),           // 6 -> ~0.75%
+    },
+    sectionSubtitle: {
+      fontSize: wp(3.5),                // 14 -> ~3.5%
+      color: "#A0A0A0",
+      marginBottom: hp(2.7),            // 22 -> ~2.7%
+    },
+    mainTitle: {
+      fontSize: wp(7),                  // 28 -> ~7%
+      fontWeight: "bold",
+      color: "#FFFFFF",
+      marginBottom: hp(1),              // 8 -> ~1%
+      textAlign: "center",
+    },
+    subtitle: {
+      fontSize: wp(3.7),                // 15 -> ~3.7%
+      color: "#A0A0A0",
+      textAlign: "center",
+      lineHeight: wp(5.5),              // 22 -> ~5.5%
+    },
 
-  // --- Inputs ---
-  formWrapper: {
-    marginBottom: 4,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  passwordWrapper: {
-    marginBottom: 16,
-  },
-  label: {
-    color: "#CCCCCC",
-    fontSize: 14,
-    fontWeight: "500",
-    marginBottom: 8,
-  },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    backgroundColor: "#1A1A1A",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#2A2A2A",
-    paddingHorizontal: 14,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 16,
-    color: "#FFFFFF",
-    fontSize: 15,
-  },
-  inputWithTrailingIcon: {
-    paddingRight: 6,
-  },
-  trailingIcon: {
-    padding: 6,
-  },
-  errorText: {
-    color: "#FF4D4D",
-    marginTop: 6,
-    fontSize: 13,
-  },
+    // --- Inputs ---
+    formWrapper: {
+      marginBottom: hp(0.5),            // 4 -> ~0.5%
+    },
+    inputGroup: {
+      marginBottom: hp(2),              // 16 -> ~2%
+    },
+    passwordWrapper: {
+      marginBottom: hp(2),              // 16 -> ~2%
+    },
+    label: {
+      color: "#CCCCCC",
+      fontSize: wp(3.5),                // 14 -> ~3.5%
+      fontWeight: "500",
+      marginBottom: hp(1),              // 8 -> ~1%
+    },
+    inputWrapper: {
+      flexDirection: "row",
+      alignItems: "center",
+      width: "100%",                    // String % best hai
+      backgroundColor: "#1A1A1A",
+      borderRadius: wp(3.5),            // 14 -> ~3.5%
+      borderWidth: 1,                   // Fixed
+      borderColor: "#2A2A2A",
+      paddingHorizontal: wp(3.5),       // 14 -> ~3.5%
+    },
+    inputIcon: {
+      marginRight: wp(2.5),             // 10 -> ~2.5%
+    },
+    input: {
+      flex: 1,
+      paddingVertical: hp(2),           // 16 -> ~2%
+      color: "#FFFFFF",
+      fontSize: wp(3.7),                // 15 -> ~3.7%
+    },
+    inputWithTrailingIcon: {
+      paddingRight: wp(1.5),            // 6 -> ~1.5%
+    },
+    trailingIcon: {
+      padding: wp(1.5),                 // 6 -> ~1.5%
+    },
+    errorText: {
+      color: "#FF4D4D",
+      marginTop: hp(0.75),              // 6 -> ~0.75%
+      fontSize: wp(3.2),                // 13 -> ~3.2%
+    },
 
-  // --- Password Checklist ---
-  checklistContainer: {
-    backgroundColor: "#1A1A1A",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#2A2A2A",
-    padding: 14,
-    marginBottom: 20,
-    gap: 8,
-  },
-  requirementRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  requirementCheck: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1.5,
-    borderColor: "#555555",
-    marginRight: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  requirementCheckMet: {
-    backgroundColor: "#4ADE80",
-    borderColor: "#4ADE80",
-  },
-  requirementText: {
-    color: "#888888",
-    fontSize: 13,
-  },
-  requirementTextMet: {
-    color: "#CCCCCC",
-  },
+    // --- Password Checklist ---
+    checklistContainer: {
+      backgroundColor: "#1A1A1A",
+      borderRadius: wp(3.5),            // 14 -> ~3.5%
+      borderWidth: 1,                   // Fixed
+      borderColor: "#2A2A2A",
+      padding: wp(3.5),                 // 14 -> ~3.5%
+      marginBottom: hp(2.5),            // 20 -> ~2.5%
+      gap: wp(2),                       // 8 -> ~2% (Vertical gap in flex column)
+    },
+    requirementRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    requirementCheck: {
+      width: wp(4.5),                   // 18 -> ~4.5% (Circle)
+      height: wp(4.5),                  // 18 -> ~4.5%
+      borderRadius: wp(2.25),           // 9 -> Half of width
+      borderWidth: 1.5,                 // Fixed
+      borderColor: "#555555",
+      marginRight: wp(2.5),             // 10 -> ~2.5%
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    requirementCheckMet: {
+      backgroundColor: "#4ADE80",
+      borderColor: "#4ADE80",
+    },
+    requirementText: {
+      color: "#888888",
+      fontSize: wp(3.2),                // 13 -> ~3.2%
+    },
+    requirementTextMet: {
+      color: "#CCCCCC",
+    },
 
-  // --- Buttons ---
-  primaryButton: {
-    width: "100%",
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    marginBottom: 20,
-  },
-  primaryButtonDisabled: {
-    backgroundColor: "#3D3D3D",
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  primaryButtonText: {
-    color: "#000000",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#2A2A2A",
-  },
-  dividerText: {
-    color: "#666666",
-    fontSize: 12,
-    marginHorizontal: 12,
-  },
-  googleButton: {
-    flexDirection: "row",
-    width: "100%",
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "#333333",
-    marginBottom: 24,
-  },
-  googleButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "500",
-  },
+    // --- Buttons ---
+    primaryButton: {
+      width: "100%",
+      paddingVertical: hp(1.7),         // 14 -> ~1.7%
+      borderRadius: wp(3.5),            // 14 -> ~3.5%
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#FFFFFF",
+      marginBottom: hp(2.5),            // 20 -> ~2.5%
+    },
+    primaryButtonDisabled: {
+      backgroundColor: "#3D3D3D",
+    },
+    pressed: {
+      opacity: 0.85,
+    },
+    primaryButtonText: {
+      color: "#000000",
+      fontWeight: "bold",
+      fontSize: wp(4),                  // 16 -> ~4%
+    },
+    dividerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: hp(2.5),            // 20 -> ~2.5%
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,                        // Fixed (Divider line)
+      backgroundColor: "#2A2A2A",
+    },
+    dividerText: {
+      color: "#666666",
+      fontSize: wp(3),                  // 12 -> ~3%
+      marginHorizontal: wp(3),          // 12 -> ~3%
+    },
+    googleButton: {
+      flexDirection: "row",
+      width: "100%",
+      paddingVertical: hp(2),           // 16 -> ~2%
+      borderRadius: wp(3.5),            // 14 -> ~3.5%
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "transparent",
+      borderWidth: 1,                   // Fixed
+      borderColor: "#333333",
+      marginBottom: hp(3),              // 24 -> ~3%
+    },
+    googleButtonText: {
+      color: "#FFFFFF",
+      fontSize: wp(3.7),                // 15 -> ~3.7%
+      fontWeight: "500",
+    },
 
-  // --- Footer ---
-  footerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  footerText: {
-    color: "#888888",
-  },
-  footerLink: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-  },
+    // --- Footer ---
+    footerContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      marginBottom: hp(2.5),            // 20 -> ~2.5%
+    },
+    footerText: {
+      color: "#888888",
+    },
+    footerLink: {
+      color: "#FFFFFF",
+      fontWeight: "bold",
+    },
 
-  // --- Verification Screen ---
-  verifyTitleContainer: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  codeInputWrapper: {
-    marginBottom: 20,
-  },
-  codeInput: {
-    width: "100%",
-    backgroundColor: "#1A1A1A",
-    padding: 16,
-    borderRadius: 14,
-    color: "#FFFFFF",
-    fontSize: 24,
-    textAlign: "center",
-    letterSpacing: 8,
-    borderWidth: 1,
-    borderColor: "#2A2A2A",
-  },
-  centerItem: {
-    alignItems: "center",
-    marginVertical: 10,
-  },
-  linkText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
-  changeEmailButton: {
-    alignItems: "center",
-    marginTop: 10,
-  },
-  changeEmailText: {
-    color: "#FFFFFF",
-    backgroundColor: "#2D2D2D",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    fontWeight: "600",
-    overflow: "hidden",
-  },
+    // --- Verification Screen ---
+    verifyTitleContainer: {
+      alignItems: "center",
+      marginBottom: hp(3.7),            // 30 -> ~3.7%
+    },
+    codeInputWrapper: {
+      marginBottom: hp(2.5),            // 20 -> ~2.5%
+    },
+    codeInput: {
+      width: "100%",
+      backgroundColor: "#1A1A1A",
+      padding: wp(4),                   // 16 -> ~4%
+      borderRadius: wp(3.5),            // 14 -> ~3.5%
+      color: "#FFFFFF",
+      fontSize: wp(6),                  // 24 -> ~6% (OTP texts bigger)
+      textAlign: "center",
+      letterSpacing: wp(2),             // 8 -> ~2% (Spaces between OTP numbers)
+      borderWidth: 1,                   // Fixed
+      borderColor: "#2A2A2A",
+    },
+    centerItem: {
+      alignItems: "center",
+      marginVertical: hp(1.2),          // 10 -> ~1.2%
+    },
+    linkText: {
+      color: "#FFFFFF",
+      fontWeight: "600",
+    },
+    changeEmailButton: {
+      alignItems: "center",
+      marginTop: hp(1.2),               // 10 -> ~1.2%
+    },
+    changeEmailText: {
+      color: "#FFFFFF",
+      backgroundColor: "#2D2D2D",
+      paddingVertical: hp(1.5),         // 12 -> ~1.5%
+      paddingHorizontal: wp(6),         // 24 -> ~6%
+      borderRadius: wp(3),              // 12 -> ~3%
+      fontWeight: "600",
+      overflow: "hidden",
+    },
 });

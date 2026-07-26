@@ -2,6 +2,7 @@ import { useSignInWithGoogle } from '@clerk/expo/google'
 import { useRouter } from 'expo-router'
 import { FontAwesome } from '@expo/vector-icons';
 import { Alert, Platform, StyleSheet, Text, TouchableOpacity } from 'react-native'
+import { hp, wp } from '@/utils/wp_hp';
 
 interface GoogleSignInButtonProps {
   onSignInComplete?: () => void
@@ -55,35 +56,36 @@ export default function GoogleSignInButton({
 
 const styles = StyleSheet.create({
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  googleButton: {
-    flexDirection: "row",
-    width: "100%",
-    paddingVertical: 16,
-    borderRadius: 14,
-    gap: 9,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "#333333",
-    marginBottom: 30,
-  },
-  googleButtonText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#ccc',
-  },
-  dividerText: {
-    marginHorizontal: 10,
-    color: '#666',
-  },
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: hp(2.5),           // 20 -> ~2.5%
+    },
+    googleButton: {
+      flexDirection: "row",
+      width: "100%",                     // String % best hai
+      paddingVertical: hp(2),            // 16 -> ~2%
+      borderRadius: wp(3.5),             // 14 -> ~3.5%
+      gap: wp(2.25),                     // 9 -> ~2.25% (Horizontal gap between icon & text)
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "transparent",
+      borderWidth: 1,                    // Fixed (1px border responsive nahi karni)
+      borderColor: "#333333",
+      marginBottom: hp(3.7),             // 30 -> ~3.7%
+    },
+    googleButtonText: {
+      color: "#FFFFFF",
+      fontSize: wp(3.2),                 // 13 -> ~3.2%
+      fontWeight: "500",
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,                         // Fixed (Thin divider lines ko scale nahi karna chahiye)
+      backgroundColor: '#ccc',
+    },
+    dividerText: {
+      marginHorizontal: wp(2.5),         // 10 -> ~2.5%
+      color: '#666',
+      // Agar isme fontSize bhi hai (e.g., 12), toh usko bhi wp(3) karna padega
+    },
 })

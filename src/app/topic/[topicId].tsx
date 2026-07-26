@@ -1,4 +1,10 @@
 import ResultScreen from "@/components/CompletionReward";
+import PythonCodeEditor from "@/components/PythonCodeEditor";
+import { useSettings } from "@/context/SwitchContext";
+import { getTopicById } from "@/data/topics";
+import { SoundManager } from "@/hooks/SoundManager";
+import { isCodeAnswerCorrect } from "@/utils/normalizeCode";
+import { saveTopicResult } from "@/utils/progressStorage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowRight, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -6,17 +12,10 @@ import {
   Dimensions,
   Pressable,
   StyleSheet,
-  Text,
-  View
+  Text, Vibration, View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { SoundManager } from "@/hooks/SoundManager";
-import PythonCodeEditor from "@/components/PythonCodeEditor";
-import { getTopicById } from "@/data/topics";
-import { isCodeAnswerCorrect } from "@/utils/normalizeCode";
-import { saveTopicResult } from "@/utils/progressStorage";
-
-
+import { hp, wp } from "@/utils/wp_hp";
 const { width: SCREEN_W } = Dimensions.get("window");
 
 const COLORS = {
@@ -40,6 +39,7 @@ const COLORS = {
 type ScreenStage = "theory" | "quiz" | "result";
 
 export default function TopicScreen() {
+  const { vibrationEnabled } = useSettings()
   const { topicId } = useLocalSearchParams<{ topicId: string }>();
   const router = useRouter();
   const topic = getTopicById(String(topicId));
@@ -88,6 +88,7 @@ export default function TopicScreen() {
   }, [stage, quizIndex]);
 
   const handleNextSlide = async () => {
+    if (vibrationEnabled) Vibration.vibrate(200)
     await SoundManager.play('next');
     if (slideIndex < totalSlides - 1) {
       setSlideIndex((i) => i + 1);
@@ -96,22 +97,37 @@ export default function TopicScreen() {
     }
   };
 
-  const handleSelectOption = (option: string) => {
+  const handleSelectOption = async (option: string) => {
     if (answeredCorrectly !== null) return; // lock after first answer, like most learning apps
     setSelectedOption(option);
     const isCorrect = option === currentQuestion.correctAnswer;
     setAnsweredCorrectly(isCorrect);
-    if (isCorrect) setCorrectCount((c) => c + 1);
+    if (isCorrect) {
+      if (vibrationEnabled) Vibration.vibrate(300)
+      await SoundManager.play('correct');
+      setCorrectCount((c) => c + 1)
+    } else {
+      if (vibrationEnabled) Vibration.vibrate(200)
+      await SoundManager.play('wrong');
+    }
   };
 
-  const handleCheckCode = () => {
+  const handleCheckCode = async () => {
     if (answeredCorrectly !== null) return; // lock after first check
     const isCorrect = isCodeAnswerCorrect(codeValue, currentQuestion.acceptedAnswers ?? []);
     setAnsweredCorrectly(isCorrect);
-    if (isCorrect) setCorrectCount((c) => c + 1);
+    if (isCorrect) {
+      if (vibrationEnabled) Vibration.vibrate(300)
+      await SoundManager.play('correct');
+      setCorrectCount((c) => c + 1)
+    } else {
+      if (vibrationEnabled) Vibration.vibrate(200)
+      await SoundManager.play('wrong');
+    }
   };
 
   const handleNextQuestion = async () => {
+    if (vibrationEnabled) Vibration.vibrate(200)
     await SoundManager.play('next');
     setSelectedOption(null);
     setAnsweredCorrectly(null);
@@ -119,11 +135,14 @@ export default function TopicScreen() {
       setQuizIndex((i) => i + 1);
     } else {
       setStage("result");
+      if (vibrationEnabled) Vibration.vibrate(400)
       await SoundManager.play('celebrate');
     }
   };
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
+    if (vibrationEnabled) Vibration.vibrate(200)
+    await SoundManager.play('click');
     setStage("theory");
     setSlideIndex(0);
     setQuizIndex(0);
@@ -134,8 +153,16 @@ export default function TopicScreen() {
     setSaved(false);
   };
 
-  const handleExit = () => router.back();
-  const handleGoHome = () => router.replace("/(tabs)/home");
+  const handleExit = async () => {
+    if (vibrationEnabled) Vibration.vibrate(200)
+    await SoundManager.play('next');
+    router.back()
+  };
+  const handleGoHome = async () => {
+    if (vibrationEnabled) Vibration.vibrate(200)
+    await SoundManager.play('correct');
+    router.replace("/(tabs)/home")
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -284,145 +311,160 @@ export default function TopicScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: COLORS.bg },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 16 },
-  notFoundText: { color: COLORS.white, fontSize: 16 },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
-  topProgressTrack: {
-    flex: 1,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.track,
-    overflow: "hidden",
-  },
-  topProgressFill: { height: 6, backgroundColor: COLORS.fill, borderRadius: 3 },
-  body: { flex: 1, paddingHorizontal: 20 },
-  topicLabel: { color: COLORS.textSecondary, fontSize: 12, fontWeight: "600", marginBottom: 10 },
-  questionCounter: { color: COLORS.textSecondary, fontSize: 12, fontWeight: "600", marginBottom: 10 },
-  slideHeading: { color: COLORS.white, fontSize: 22, fontWeight: "700", marginBottom: 12 },
-  slideBody: { color: COLORS.textSecondary, fontSize: 14, lineHeight: 21 },
-  codeBlock: {
-    backgroundColor: COLORS.codeBg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    padding: 14,
-    marginTop: 16,
-  },
-  codeText: { color: "#8FE388", fontFamily: "monospace", fontSize: 13, lineHeight: 19 },
-  dotsRow: { flexDirection: "row", justifyContent: "center", gap: 6, marginTop: "auto", marginBottom: 20 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.track },
-  dotActive: { backgroundColor: COLORS.white, width: 18 },
-  editorHint: { color: COLORS.textSecondary, fontSize: 12, marginTop: 16, marginBottom: 8 },
-  checkBtn: {
-    marginTop: 12,
-    backgroundColor: COLORS.card,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    borderRadius: 14,
-    paddingVertical: 13,
-    alignItems: "center",
-  },
-  checkBtnText: { color: COLORS.white, fontWeight: "700", fontSize: 14 },
-  outputBlock: {
-    marginTop: 14,
-    backgroundColor: "#0F1F14",
-    borderWidth: 1,
-    borderColor: COLORS.correct,
-    borderRadius: 12,
-    padding: 14,
-  },
-  outputLabel: { color: COLORS.textSecondary, fontSize: 11, fontWeight: "700", marginBottom: 4 },
-  outputText: { color: COLORS.correct, fontFamily: "monospace", fontSize: 14 },
-  solutionBlock: {
-    marginTop: 12,
-    backgroundColor: COLORS.codeBg,
-    borderRadius: 10,
-    padding: 10,
-  },
-  optionsWrap: { marginTop: 20, gap: 10 },
-  optionBtn: {
-    backgroundColor: COLORS.card,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  optionCorrect: { borderColor: COLORS.correct, backgroundColor: "#0F1F14" },
-  optionWrong: { borderColor: COLORS.wrong, backgroundColor: "#210E0E" },
-  optionText: { color: COLORS.white, fontSize: 14, fontWeight: "500" },
-  explanationBox: {
-    marginTop: 16,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: COLORS.correctCard,
-    borderWidth: 1,
-    borderColor: COLORS.correctBorder,
-  },
-  explanationBox2: {
-    marginTop: 16,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: COLORS.incorrectCard,
-    borderWidth: 1,
-    borderColor: COLORS.incorrectBorder,
-  },
-  explanationLabel: { color: COLORS.white, fontWeight: "700", marginBottom: 4 },
-  explanationText: { color: COLORS.textSecondary, fontSize: 13, lineHeight: 19 },
-  primaryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: COLORS.white,
-    borderRadius: 14,
-    paddingVertical: 15,
-    marginBottom: 24,
-    marginTop: 15,
-  },
-  primaryBtnDisabled: { opacity: 0.35 },
-  primaryBtnText: { color: COLORS.bg, fontWeight: "700", fontSize: 15 },
-  resultWrap: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 },
-  trophyCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: "#1C1C1E",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-  },
-  starsRow: { flexDirection: "row", gap: 12, marginBottom: 20 },
-  resultTitle: { color: COLORS.white, fontSize: 24, fontWeight: "800", marginBottom: 8 },
-  resultSubtitle: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    textAlign: "center",
-    lineHeight: 19,
-    marginBottom: 24,
-    paddingHorizontal: 12,
-  },
-  statsRow: { flexDirection: "row", gap: 12, marginBottom: 28, width: "100%" },
-  statCard: {
-    flex: 1,
-    backgroundColor: COLORS.card,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  statValue: { color: COLORS.white, fontSize: 20, fontWeight: "800" },
-  statLabel: { color: COLORS.textSecondary, fontSize: 11, marginTop: 4 },
-  retryBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8 },
-  retryBtnText: { color: COLORS.white, fontSize: 13, fontWeight: "600" },
+    center: { flex: 1, alignItems: "center", justifyContent: "center", gap: wp(4) }, // 16 -> ~4%
+    notFoundText: { color: COLORS.white, fontSize: wp(4) }, // 16 -> ~4%
+    
+    topBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: wp(3),                     // 12 -> ~3%
+      paddingHorizontal: wp(5),       // 20 -> ~5%
+      paddingTop: hp(1),              // 8 -> ~1%
+      paddingBottom: hp(2),           // 16 -> ~2%
+    },
+    topProgressTrack: {
+      flex: 1,
+      height: wp(1.5),                // 6 -> ~1.5% (Thin bars ko wp se karna safe hai)
+      borderRadius: wp(0.75),         // 3 -> Half of height for perfect rounded ends
+      backgroundColor: COLORS.track,
+      overflow: "hidden",
+    },
+    topProgressFill: { 
+      height: wp(1.5),                // 6 -> ~1.5%
+      backgroundColor: COLORS.fill, 
+      borderRadius: wp(0.75)          // 3 -> ~0.75%
+    },
+    
+    body: { flex: 1, paddingHorizontal: wp(5) }, // 20 -> ~5%
+    topicLabel: { color: COLORS.textSecondary, fontSize: wp(3), fontWeight: "600", marginBottom: hp(1.25) }, // 12 -> 3%, 10 -> 1.25%
+    questionCounter: { color: COLORS.textSecondary, fontSize: wp(3), fontWeight: "600", marginBottom: hp(1.25) },
+    slideHeading: { color: COLORS.white, fontSize: wp(5.5), fontWeight: "700", marginBottom: hp(1.5) }, // 22 -> 5.5%, 12 -> 1.5%
+    slideBody: { color: COLORS.textSecondary, fontSize: wp(3.5), lineHeight: wp(5.25) }, // 14 -> 3.5%, 21 -> 5.25%
+    
+    codeBlock: {
+      backgroundColor: COLORS.codeBg,
+      borderRadius: wp(3),            // 12 -> ~3%
+      borderWidth: 1,                 // Fixed
+      borderColor: COLORS.cardBorder,
+      padding: wp(3.5),               // 14 -> ~3.5%
+      marginTop: hp(2),               // 16 -> ~2%
+    },
+    codeText: { color: "#8FE388", fontFamily: "monospace", fontSize: wp(3.25), lineHeight: wp(4.75) }, // 13 -> 3.25%, 19 -> 4.75%
+    
+    dotsRow: { flexDirection: "row", justifyContent: "center", gap: wp(1.5), marginTop: "auto", marginBottom: hp(2.5) }, // 6 -> 1.5%, 20 -> 2.5%
+    dot: { width: wp(1.5), height: wp(1.5), borderRadius: wp(0.75), backgroundColor: COLORS.track }, // Circle: 6 -> 1.5%, radius half of width
+    dotActive: { backgroundColor: COLORS.white, width: wp(4.5) }, // Capsule: 18 -> 4.5% (Height aur radius inherited from 'dot' style, perfect pill shape banega)
+    
+    editorHint: { color: COLORS.textSecondary, fontSize: wp(3), marginTop: hp(2), marginBottom: hp(1) }, // 12 -> 3%
+    checkBtn: {
+      marginTop: hp(1.5),            // 12 -> ~1.5%
+      backgroundColor: COLORS.card,
+      borderWidth: 1,                 // Fixed
+      borderColor: COLORS.cardBorder,
+      borderRadius: wp(3.5),          // 14 -> ~3.5%
+      paddingVertical: hp(1.6),       // 13 -> ~1.6%
+      alignItems: "center",
+    },
+    checkBtnText: { color: COLORS.white, fontWeight: "700", fontSize: wp(3.5) }, // 14 -> 3.5%
+    
+    outputBlock: {
+      marginTop: hp(1.75),            // 14 -> ~1.75%
+      backgroundColor: "#0F1F14",
+      borderWidth: 1,                 // Fixed
+      borderColor: COLORS.correct,
+      borderRadius: wp(3),            // 12 -> ~3%
+      padding: wp(3.5),               // 14 -> ~3.5%
+    },
+    outputLabel: { color: COLORS.textSecondary, fontSize: wp(2.75), fontWeight: "700", marginBottom: hp(0.5) }, // 11 -> 2.75%, 4 -> 0.5%
+    outputText: { color: COLORS.correct, fontFamily: "monospace", fontSize: wp(3.5) }, // 14 -> 3.5%
+    
+    solutionBlock: {
+      marginTop: hp(1.5),             // 12 -> ~1.5%
+      backgroundColor: COLORS.codeBg,
+      borderRadius: wp(2.5),          // 10 -> ~2.5%
+      padding: wp(2.5),               // 10 -> ~2.5%
+    },
+    
+    optionsWrap: { marginTop: hp(2.5), gap: wp(2.5) }, // 20 -> 2.5%, 10 -> 2.5%
+    optionBtn: {
+      backgroundColor: COLORS.card,
+      borderWidth: 1,                 // Fixed
+      borderColor: COLORS.cardBorder,
+      borderRadius: wp(3.5),          // 14 -> ~3.5%
+      paddingVertical: hp(1.75),      // 14 -> ~1.75%
+      paddingHorizontal: wp(4),       // 16 -> ~4%
+    },
+    optionCorrect: { borderColor: COLORS.correct, backgroundColor: "#0F1F14" },
+    optionWrong: { borderColor: COLORS.wrong, backgroundColor: "#210E0E" },
+    optionText: { color: COLORS.white, fontSize: wp(3.5), fontWeight: "500" }, // 14 -> 3.5%
+    
+    explanationBox: {
+      marginTop: hp(2),               // 16 -> ~2%
+      padding: wp(3.5),               // 14 -> ~3.5%
+      borderRadius: wp(3.5),          // 14 -> ~3.5%
+      backgroundColor: COLORS.correctCard,
+      borderWidth: 1,                 // Fixed
+      borderColor: COLORS.correctBorder,
+    },
+    explanationBox2: {
+      marginTop: hp(2),
+      padding: wp(3.5),
+      borderRadius: wp(3.5),
+      backgroundColor: COLORS.incorrectCard,
+      borderWidth: 1,                 // Fixed
+      borderColor: COLORS.incorrectBorder,
+    },
+    explanationLabel: { color: COLORS.white, fontWeight: "700", marginBottom: hp(0.5) }, // 4 -> 0.5%
+    explanationText: { color: COLORS.textSecondary, fontSize: wp(3.25), lineHeight: wp(4.75) }, // 13 -> 3.25%, 19 -> 4.75%
+    
+    primaryBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: wp(2),                     // 8 -> ~2%
+      backgroundColor: COLORS.white,
+      borderRadius: wp(3.5),          // 14 -> ~3.5%
+      paddingVertical: hp(1.87),      // 15 -> ~1.87%
+      marginBottom: hp(3),            // 24 -> ~3%
+      marginTop: hp(1.87),            // 15 -> ~1.87%
+    },
+    primaryBtnDisabled: { opacity: 0.35 },
+    primaryBtnText: { color: COLORS.bg, fontWeight: "700", fontSize: wp(3.75) }, // 15 -> 3.75%
+    
+    resultWrap: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: wp(6) }, // 24 -> 6%
+    trophyCircle: {
+      width: wp(24),                  // 96 -> ~24% (Circle)
+      height: wp(24),                 // 96 -> ~24%
+      borderRadius: wp(12),           // 48 -> Half of width for perfect circle
+      backgroundColor: "#1C1C1E",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: hp(2),            // 16 -> ~2%
+      borderWidth: 1,                 // Fixed
+      borderColor: COLORS.cardBorder,
+    },
+    starsRow: { flexDirection: "row", gap: wp(3), marginBottom: hp(2.5) }, // 12 -> 3%, 20 -> 2.5%
+    resultTitle: { color: COLORS.white, fontSize: wp(6), fontWeight: "800", marginBottom: hp(1) }, // 24 -> 6%, 8 -> 1%
+    resultSubtitle: {
+      color: COLORS.textSecondary,
+      fontSize: wp(3.25),             // 13 -> ~3.25%
+      textAlign: "center",
+      lineHeight: wp(4.75),           // 19 -> ~4.75%
+      marginBottom: hp(3),            // 24 -> ~3%
+      paddingHorizontal: wp(3),       // 12 -> ~3%
+    },
+    statsRow: { flexDirection: "row", gap: wp(3), marginBottom: hp(3.5), width: "100%" }, // 12 -> 3%, 28 -> 3.5%
+    statCard: {
+      flex: 1,
+      backgroundColor: COLORS.card,
+      borderRadius: wp(3.5),          // 14 -> ~3.5%
+      borderWidth: 1,                 // Fixed
+      borderColor: COLORS.cardBorder,
+      paddingVertical: hp(2),         // 16 -> ~2%
+      alignItems: "center",
+    },
+    statValue: { color: COLORS.white, fontSize: wp(5), fontWeight: "800" }, // 20 -> 5%
+    statLabel: { color: COLORS.textSecondary, fontSize: wp(2.75), marginTop: hp(0.5) }, // 11 -> 2.75%, 4 -> 0.5%
+    retryBtn: { flexDirection: "row", alignItems: "center", gap: wp(1.5), paddingVertical: hp(1) }, // 6 -> 1.5%, 8 -> 1%
+    retryBtnText: { color: COLORS.white, fontSize: wp(3.25), fontWeight: "600" }, // 13 -> 3.25%
 });

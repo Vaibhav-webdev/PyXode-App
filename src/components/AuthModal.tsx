@@ -1,6 +1,6 @@
-import React from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { AlertTriangle, CheckCircle2, Info } from "lucide-react-native";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { hp, wp } from "@/utils/wp_hp";
 
 export type AuthModalType = "error" | "success" | "info";
 
@@ -73,60 +73,60 @@ export function getClerkErrorMessage(error: any): string {
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.65)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 28,
-  },
-  card: {
-    width: "100%",
-    backgroundColor: "#1A1A1A",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#2A2A2A",
-    paddingVertical: 26,
-    paddingHorizontal: 22,
-    alignItems: "center",
-  },
-  iconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 1.5,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-    backgroundColor: "#0e0e0e",
-  },
-  title: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  message: {
-    color: "#A0A0A0",
-    fontSize: 13,
-    textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 22,
-  },
-  button: {
-    width: "100%",
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  buttonText: {
-    color: "#000000",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
+ backdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.65)",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: wp(7),        // 28 -> ~7%
+    },
+    card: {
+      width: "100%",                   // String % original hi best hai
+      backgroundColor: "#1A1A1A",
+      borderRadius: wp(4.5),           // 18 -> ~4.5%
+      borderWidth: 1,                  // Fixed (Border width responsive nahi karni)
+      borderColor: "#2A2A2A",
+      paddingVertical: hp(3.2),        // 26 -> ~3.2%
+      paddingHorizontal: wp(5.5),      // 22 -> ~5.5%
+      alignItems: "center",
+    },
+    iconWrap: {
+      width: wp(14),                   // 56 -> ~14% (Circle)
+      height: wp(14),                  // 56 -> ~14%
+      borderRadius: wp(7),             // 28 -> Half of width for perfect circle
+      borderWidth: 1.5,                // Fixed
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: hp(2),             // 16 -> ~2%
+      backgroundColor: "#0e0e0e",
+    },
+    title: {
+      color: "#FFFFFF",
+      fontSize: wp(4.2),               // 17 -> ~4.2%
+      fontWeight: "bold",
+      marginBottom: hp(1),             // 8 -> ~1%
+      textAlign: "center",
+    },
+    message: {
+      color: "#A0A0A0",
+      fontSize: wp(3.2),               // 13 -> ~3.2%
+      textAlign: "center",
+      lineHeight: wp(5),               // 20 -> ~5%
+      marginBottom: hp(2.7),           // 22 -> ~2.7%
+    },
+    button: {
+      width: "100%",                   // String % original hi best hai
+      paddingVertical: hp(1.7),        // 14 -> ~1.7%
+      borderRadius: wp(3.5),           // 14 -> ~3.5%
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    pressed: {
+      opacity: 0.85,
+    },
+    buttonText: {
+      color: "#000000",
+      fontWeight: "bold",
+      fontSize: wp(3.5),               // 14 -> ~3.5%
+    },
 });

@@ -1,6 +1,13 @@
 import AvatarSVG from "@/components/AvatarSVG";
+import { TabKey, TABS, TopicContent, TOPICS_BY_TAB } from "@/data/topics";
+import { getTopicIcon } from "@/data/topics/iconMap";
+import { SoundManager } from "@/hooks/SoundManager";
+import { getAllProgress, TopicProgress } from "@/utils/progressStorage";
 import { useUser } from "@clerk/expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useSettings } from "@/context/SwitchContext";
+import { Vibration } from "react-native";
+import { hp, wp } from "@/utils/wp_hp";
 import { useRouter } from "expo-router";
 import { LayoutGrid, Lock, Settings } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
@@ -15,10 +22,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-import { SoundManager } from "@/hooks/SoundManager";
-import { TabKey, TABS, TopicContent, TOPICS_BY_TAB } from "@/data/topics";
-import { getTopicIcon } from "@/data/topics/iconMap";
-import { getAllProgress, TopicProgress } from "@/utils/progressStorage";
+import { useWindowDimensions } from "react-native";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const H_PADDING = 20;
@@ -145,6 +149,7 @@ const VerticalLoopConnector = ({ side }: { side: "left" | "right" }) => {
 const SnakeRow = ({
   topics,
   reversed,
+  vibrationEnabled,
   connectorSide,
   showConnectorBelow,
   progressMap,
@@ -152,6 +157,7 @@ const SnakeRow = ({
 }: {
   topics: TopicContent[];
   reversed: boolean;
+  vibrationEnabled: any;
   connectorSide?: "left" | "right";
   showConnectorBelow?: boolean;
   progressMap: Record<string, TopicProgress>;
@@ -173,6 +179,9 @@ const SnakeRow = ({
                 progress={progress}
                 locked={locked}
                 onPress={async () => {
+                  if (vibrationEnabled) {
+                    Vibration.vibrate(200)
+                  }
                   await SoundManager.play('click');
                   onOpenTopic(topic, locked)
                 }}
@@ -235,6 +244,7 @@ const AvatarPickerSheet = ({
 // Screen
 // ---------------------------------------------------------------------------
 export default function HomeScreen() {
+
   const { user } = useUser();
   const router = useRouter();
   const firstName = user?.firstName ?? "there";
@@ -280,6 +290,8 @@ export default function HomeScreen() {
     router.push(`/topic/${topic.id}` as any);
   };
 
+  const { vibrationEnabled } = useSettings();
+
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <ScrollView
@@ -293,7 +305,11 @@ export default function HomeScreen() {
             <LayoutGrid color={COLORS.white} size={24} />
           </Pressable>
           <Text style={styles.headerTitle}>Python</Text>
-          <Pressable onPress={() => {
+          <Pressable onPress={async () => {
+            if (vibrationEnabled) {
+              Vibration.vibrate(200)
+            };
+            await SoundManager.play('click');;
             router.push("/(tabs)/settings")
           }} hitSlop={10}>
             <Settings color={COLORS.white} size={24} />
@@ -309,7 +325,14 @@ export default function HomeScreen() {
             </Text>
           </View>
           <Pressable onPress={async () => {
-            await SoundManager.play('click');
+            if (vibrationEnabled) {
+              Vibration.vibrate(200)
+            }; if (vibrationEnabled) {
+              Vibration.vibrate(200)
+            }; if (vibrationEnabled) {
+              Vibration.vibrate(200)
+            }
+            await SoundManager.play('click');;
             setPickerVisible(true)
           }} style={styles.avatarPressable}>
             <AvatarSVG id={avatarId} size={68} />
@@ -329,7 +352,10 @@ export default function HomeScreen() {
                 key={tab.key}
                 style={[styles.segmentPill, isActive && styles.segmentPillActive]}
                 onPress={async () => {
-                  await SoundManager.play('click');
+                  if (vibrationEnabled) {
+                    Vibration.vibrate(200)
+                  }
+                  await SoundManager.play('click');;
                   setActiveTab(tab.key)
                 }}
               >
@@ -360,6 +386,7 @@ export default function HomeScreen() {
                 connectorSide={connectorSide}
                 showConnectorBelow={!isLastRow}
                 progressMap={progressMap}
+                vibrationEnabled={vibrationEnabled}
                 onOpenTopic={handleOpenTopic}
               />
             );
@@ -370,7 +397,11 @@ export default function HomeScreen() {
         visible={pickerVisible}
         selected={avatarId}
         onSelect={handleSelectAvatar}
-        onClose={() => setPickerVisible(false)}
+        onClose={() => {
+          if (vibrationEnabled) Vibration.vibrate(200)
+          SoundManager.play('click')
+          setPickerVisible(false)
+        }}
       />
     </SafeAreaView>
   );
@@ -378,103 +409,103 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: COLORS.bg },
-  container: { flex: 1, paddingHorizontal: H_PADDING },
+  container: { flex: 1, paddingHorizontal: wp(5) }, // Assuming H_PADDING was around 5% of width
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingTop: hp(1),
+    paddingBottom: hp(0.5),
   },
-  headerTitle: { color: COLORS.white, fontSize: 18, fontWeight: "600" },
+  headerTitle: { color: COLORS.white, fontSize: wp(4.5), fontWeight: "600" },
   greetingRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 24,
-    marginBottom: 23,
+    marginTop: hp(3),
+    marginBottom: hp(2.8),
   },
-  greetingTitle: { color: COLORS.white, fontSize: 26, fontWeight: "700" },
-  greetingSubtitle: { color: COLORS.textSecondary, fontSize: 14, marginTop: 8, lineHeight: 18 },
+  greetingTitle: { color: COLORS.white, fontSize: wp(6.5), fontWeight: "700" },
+  greetingSubtitle: { color: COLORS.textSecondary, fontSize: wp(3.5), marginTop: hp(1), lineHeight: wp(4.5) },
   avatarPressable: {
-    borderWidth: 2,
+    borderWidth: 2, // Border width fixed rakho
     borderColor: "#d8d8d891",
     backgroundColor: "#232323",
-    width: 72,
-    height: 72,
-    borderRadius: 14,
+    width: wp(18),
+    height: wp(18), // Square hai, isliye wp use kiya height mein bhi
+    borderRadius: wp(3.5),
     alignItems: "center",
     justifyContent: "center",
   },
-  segmentRow: { gap: 8, paddingBottom: 16 },
+  segmentRow: { gap: wp(2), paddingBottom: hp(2) },
   segmentPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 20,
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1.1),
+    borderRadius: wp(5),
     backgroundColor: COLORS.pill,
-    borderWidth: 1,
+    borderWidth: 1, // Fixed
     borderColor: COLORS.pillBorder,
   },
   segmentPillActive: { backgroundColor: COLORS.white, borderColor: COLORS.white },
-  segmentText: { color: COLORS.textSecondary, fontSize: 13, fontWeight: "500" },
-  segmentTextActive: { color: COLORS.bg, fontSize: 13, fontWeight: "700" },
+  segmentText: { color: COLORS.textSecondary, fontSize: wp(3.2), fontWeight: "500" },
+  segmentTextActive: { color: COLORS.bg, fontSize: wp(3.2), fontWeight: "700" },
   sectionHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    marginBottom: hp(1.7),
   },
-  sectionHeaderTitle: { color: COLORS.white, fontSize: 20, fontWeight: "700" },
-  // snakeWrap: { paddingBottom: 24 },
+  sectionHeaderTitle: { color: COLORS.white, fontSize: wp(5), fontWeight: "700" },
+  // snakeWrap: { paddingBottom: hp(3) },
   rowWrap: { position: "relative" },
-  row: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  hConnector: { marginHorizontal: -2 },
-  verticalLoopWrap: { position: "absolute", bottom: -CARD_GAP - 10 },
+  row: { flexDirection: "row", alignItems: "center", marginBottom: hp(1.5) },
+  hConnector: { marginHorizontal: wp(-0.5) }, // Negative values bhi work karti hain
+  verticalLoopWrap: { position: "absolute", bottom: -(CARD_GAP + hp(1.2)) }, // -10 ko hp(1.2) mein convert kiya
   card: {
-    width: CARD_W,
-    height: CARD_H,
+    width: CARD_W, // Aap CARD_W ko bhi wp(x) se define karein component mein
+    height: CARD_H, // Aap CARD_H ko bhi hp(x) se define karein component mein
     backgroundColor: COLORS.card,
-    borderRadius: 18,
-    borderWidth: 1,
+    borderRadius: wp(4.5),
+    borderWidth: 1, // Fixed
     borderColor: COLORS.cardBorder,
-    padding: 10,
+    padding: wp(2.5),
     justifyContent: "space-between",
   },
   cardLocked: { backgroundColor: COLORS.cardLocked },
   cardTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  cardNumber: { color: COLORS.textSecondary, fontSize: 11, fontWeight: "600" },
+  cardNumber: { color: COLORS.textSecondary, fontSize: wp(2.7), fontWeight: "600" },
   cardIconWrap: { alignItems: "center", justifyContent: "center", flex: 1 },
-  cardTitle: { color: COLORS.white, fontSize: 11, fontWeight: "600", lineHeight: 14 },
+  cardTitle: { color: COLORS.white, fontSize: wp(2.7), fontWeight: "600", lineHeight: wp(3.5) },
   progressTrack: {
-    height: 4,
-    borderRadius: 2,
+    height: hp(0.5),
+    borderRadius: wp(0.5),
     backgroundColor: COLORS.track,
-    marginTop: 6,
+    marginTop: hp(0.7),
     overflow: "hidden",
   },
-  progressFill: { height: 4, backgroundColor: COLORS.fillBar, borderRadius: 2 },
+  progressFill: { height: hp(0.5), backgroundColor: COLORS.fillBar, borderRadius: wp(0.5) },
   sheetBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)" },
   sheet: {
     backgroundColor: COLORS.sheetBg,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    paddingBottom: 32,
+    borderTopLeftRadius: wp(6),
+    borderTopRightRadius: wp(6),
+    padding: wp(5),
+    paddingBottom: hp(4),
   },
   sheetHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
+    width: wp(10),
+    height: hp(0.5),
+    borderRadius: wp(0.5),
     backgroundColor: COLORS.pillBorder,
     alignSelf: "center",
-    marginBottom: 16,
+    marginBottom: hp(2),
   },
   sheetHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  sheetTitle: { color: COLORS.white, fontSize: 18, fontWeight: "700" },
-  sheetSubtitle: { color: COLORS.textSecondary, fontSize: 13, marginTop: 4 },
+  sheetTitle: { color: COLORS.white, fontSize: wp(4.5), fontWeight: "700" },
+  sheetSubtitle: { color: COLORS.textSecondary, fontSize: wp(3.2), marginTop: hp(0.5) },
   sheetCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: wp(8),
+    height: wp(8), // Circle hai isliye width ke hisaab se
+    borderRadius: wp(4), // Half of width for perfect circle
     backgroundColor: COLORS.pill,
     alignItems: "center",
     justifyContent: "center",
@@ -483,26 +514,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginTop: 24,
+    marginTop: hp(3),
   },
-  avatarOption: { width: "30%", alignItems: "center", marginBottom: 20 },
+  avatarOption: { width: "30%", alignItems: "center", marginBottom: hp(2.5) }, // width "30%" string format mein better hai
   avatarOptionRing: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    width: wp(19),
+    height: wp(19), // Circle/Square
+    borderRadius: wp(9.5), // Half of width
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
+    borderWidth: 2, // Fixed
     borderColor: "transparent",
   },
   avatarOptionRingActive: { borderColor: COLORS.white },
-  avatarOptionLabel: { color: COLORS.textSecondary, fontSize: 11, marginTop: 8, textAlign: "center" },
+  avatarOptionLabel: { color: COLORS.textSecondary, fontSize: wp(2.7), marginTop: hp(1), textAlign: "center" },
   sheetDoneBtn: {
     backgroundColor: COLORS.white,
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: wp(3.5),
+    paddingVertical: hp(1.7),
     alignItems: "center",
-    marginTop: 8,
+    marginTop: hp(1),
   },
-  sheetDoneText: { color: COLORS.bg, fontWeight: "700", fontSize: 15 },
+  sheetDoneText: { color: COLORS.bg, fontWeight: "700", fontSize: wp(3.7) },
 });

@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TextInput, StyleSheet, Platform } from "react-native";
 import { tokenizePython, TOKEN_COLORS } from "@/utils/pythonHighlighter";
+import { hp, wp } from "@/utils/wp_hp";
 
 type Props = {
   value: string;
@@ -66,32 +67,32 @@ export default function PythonCodeEditor({
 const styles = StyleSheet.create({
   mono: {
     fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }),
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: wp(3.5),
+    lineHeight: wp(5.25),
   },
   input: {
     backgroundColor: "#0D0D0D",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#262626",
-    padding: 14,
+    padding: wp(3.5),
     color: "#FFFFFF",
   },
   inputLocked: { opacity: 0.6 },
   previewWrapper: {
-    marginTop: 10,
+    marginTop: wp(2.5),
     backgroundColor: "#0D0D0D",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#1C1C1E",
-    padding: 14,
+    padding: wp(3.5),
   },
   previewLabel: {
     color: "#5C5C60",
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 0.5,
-    marginBottom: 6,
+    marginBottom: wp(1.2),
     textTransform: "uppercase",
   },
   previewPlaceholder: { color: "#5C5C60", fontFamily: "monospace" },

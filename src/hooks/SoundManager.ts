@@ -1,4 +1,5 @@
-import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
 export const SOUND_ASSETS = {
   click: require('@/assets/sounds/click.wav'),
@@ -29,17 +30,25 @@ class SoundManagerClass {
 
   async play(soundName: SoundType) {
     try {
+      // Check user setting
+      const soundEnabled =
+        (await AsyncStorage.getItem("soundEnabled")) === "true";
+
+      if (!soundEnabled) {
+        return;
+      }
+
       await this.initAudioMode();
 
-      // Agar sound memory me nahi hai, toh createAudioPlayer se initialize karein
       if (!this.sounds[soundName]) {
-        this.sounds[soundName] = createAudioPlayer(SOUND_ASSETS[soundName]);
+        this.sounds[soundName] = createAudioPlayer(
+          SOUND_ASSETS[soundName]
+        );
       }
 
       const player = this.sounds[soundName];
 
       if (player) {
-        // Repeated play ke liye sound ko zero timestamp par reset karke chalaayein
         await player.seekTo(0);
         player.play();
       }

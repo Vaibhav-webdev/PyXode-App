@@ -9,6 +9,7 @@ import {
   Easing,
 } from "react-native";
 import { Trophy, Star, RotateCcw } from "lucide-react-native";
+import { hp, wp } from "@/utils/wp_hp";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 
@@ -682,160 +683,160 @@ const ResultScreen = ({
 // ═══════════════════════════════════════════════════════════
 const s = StyleSheet.create({
   wrap: {
-    flex: 1,
-    backgroundColor: C.bg,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    overflow: "hidden",
-  },
+      flex: 1,
+      backgroundColor: C.bg,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: wp(6),           // 24 -> ~6%
+      overflow: "hidden",
+    },
 
-  // ── Trophy ──
-  trophySection: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
-  },
-  glow: {
-    position: "absolute",
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-  },
-  ringBurst: {
-    position: "absolute",
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    borderWidth: 1.5,
-  },
-  trophyCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#0A0A0A",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 24,
-    elevation: 8,
-  },
+    // ── Trophy ──
+    trophySection: {
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: hp(1.7),              // 14 -> ~1.7%
+    },
+    glow: {
+      position: "absolute",
+      width: wp(45),                      // 180 -> ~45% (Circle)
+      height: wp(45),                     // 180 -> ~45%
+      borderRadius: wp(22.5),             // 90 -> Half of width for perfect circle
+    },
+    ringBurst: {
+      position: "absolute",
+      width: wp(24),                      // 96 -> ~24% (Circle)
+      height: wp(24),                     // 96 -> ~24%
+      borderRadius: wp(12),               // 48 -> Half of width
+      borderWidth: 1.5,                   // Fixed (Border widths responsive nahi karni)
+    },
+    trophyCircle: {
+      width: wp(25),                      // 100 -> ~25% (Circle)
+      height: wp(25),                     // 100 -> ~25%
+      borderRadius: wp(12.5),             // 50 -> Half of width
+      backgroundColor: "#0A0A0A",
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1.5,                   // Fixed
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.3,                 // Fixed
+      shadowRadius: wp(6),                // 24 -> ~6% (Shadow radius scale karne se tablet par glow achhi lagegi)
+      elevation: 8,                       // Fixed (Android elevation)
+    },
 
-  // ── Stars ──
-  starsRow: {
-    flexDirection: "row",
-    gap: 16,
-    marginBottom: 18,
-    alignItems: "center",
-  },
-  starContainer: {
-    padding: 2,
-  },
+    // ── Stars ──
+    starsRow: {
+      flexDirection: "row",
+      gap: wp(4),                         // 16 -> ~4% (Horizontal gap)
+      marginBottom: hp(2.2),              // 18 -> ~2.2%
+      alignItems: "center",
+    },
+    starContainer: {
+      padding: wp(0.5),                   // 2 -> ~0.5%
+    },
 
-  // ── Content ──
-  content: {
-    alignItems: "center",
-    width: "100%",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    marginBottom: 8,
-    textAlign: "center",
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    color: C.muted,
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 21,
-    marginBottom: 28,
-    paddingHorizontal: 12,
-  },
+    // ── Content ──
+    content: {
+      alignItems: "center",
+      width: "100%",                      // String % best hai
+    },
+    title: {
+      fontSize: wp(7),                    // 28 -> ~7%
+      fontWeight: "800",
+      marginBottom: hp(1),                // 8 -> ~1%
+      textAlign: "center",
+      letterSpacing: wp(-0.12),           // -0.5 -> ~-0.12%
+    },
+    subtitle: {
+      color: C.muted,
+      fontSize: wp(3.5),                  // 14 -> ~3.5%
+      textAlign: "center",
+      lineHeight: wp(5.2),                // 21 -> ~5.2%
+      marginBottom: hp(3.5),              // 28 -> ~3.5%
+      paddingHorizontal: wp(3),           // 12 -> ~3%
+    },
 
-  // ── Stats ──
-  statsRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 30,
-    width: "100%",
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: C.card,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: C.border,
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    alignItems: "center",
-  },
-  statValue: {
-    fontSize: 32,
-    fontWeight: "800",
-    letterSpacing: -1.5,
-  },
-  statLabel: {
-    color: C.muted,
-    fontSize: 11,
-    marginTop: 2,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  progressBarBg: {
-    width: "100%",
-    height: 4,
-    borderRadius: 2,
-    marginTop: 14,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 2,
-  },
-  xpRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    marginTop: 12,
-  },
-  xpLabel: {
-    color: C.muted,
-    fontSize: 10,
-    fontWeight: "600",
-    letterSpacing: 0.3,
-  },
+    // ── Stats ──
+    statsRow: {
+      flexDirection: "row",
+      gap: wp(3),                         // 12 -> ~3% (Horizontal gap)
+      marginBottom: hp(3.7),              // 30 -> ~3.7%
+      width: "100%",
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: C.card,
+      borderRadius: wp(4.5),              // 18 -> ~4.5%
+      borderWidth: 1,                     // Fixed
+      borderColor: C.border,
+      paddingVertical: hp(2.5),           // 20 -> ~2.5%
+      paddingHorizontal: wp(4),           // 16 -> ~4%
+      alignItems: "center",
+    },
+    statValue: {
+      fontSize: wp(8),                    // 32 -> ~8%
+      fontWeight: "800",
+      letterSpacing: wp(-0.37),           // -1.5 -> ~-0.37%
+    },
+    statLabel: {
+      color: C.muted,
+      fontSize: wp(2.7),                  // 11 -> ~2.7%
+      marginTop: hp(0.25),                // 2 -> ~0.25%
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: wp(0.25),            // 1 -> ~0.25%
+    },
+    progressBarBg: {
+      width: "100%",
+      height: wp(1),                      // 4 -> ~1% (Very thin heights ko wp se karna safe hai taaki 0 na ho jaye)
+      borderRadius: wp(0.25),             // 2 -> ~0.5% (Half of height)
+      marginTop: hp(1.7),                 // 14 -> ~1.7%
+      overflow: "hidden",
+    },
+    progressFill: {
+      height: "100%",                     // String % best hai parent se relation ke liye
+      borderRadius: wp(0.25),             // 2 -> ~0.5%
+    },
+    xpRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: wp(1.2),                       // 5 -> ~1.2%
+      marginTop: hp(1.5),                 // 12 -> ~1.5%
+    },
+    xpLabel: {
+      color: C.muted,
+      fontSize: wp(2.5),                  // 10 -> ~2.5%
+      fontWeight: "600",
+      letterSpacing: wp(0.07),            // 0.3 -> ~0.075%
+    },
 
-  // ── Buttons ──
-  primaryBtn: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 14,
-    paddingVertical: 16,
-    marginBottom: 10,
-  },
-  primaryBtnText: {
-    fontWeight: "700",
-    fontSize: 15.5,
-    letterSpacing: -0.2,
-  },
-  retryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 12,
-  },
-  retryBtnText: {
-    color: C.muted,
-    fontSize: 13,
-    fontWeight: "600",
-  },
+    // ── Buttons ──
+    primaryBtn: {
+      width: "100%",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: wp(3.5),              // 14 -> ~3.5%
+      paddingVertical: hp(2),             // 16 -> ~2%
+      marginBottom: hp(1.2),             // 10 -> ~1.2%
+    },
+    primaryBtnText: {
+      fontWeight: "700",
+      fontSize: wp(3.8),                  // 15.5 -> ~3.875%
+      letterSpacing: wp(-0.05),           // -0.2 -> ~-0.05%
+    },
+    retryBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: wp(1.5),                       // 6 -> ~1.5%
+      paddingVertical: hp(1.5),           // 12 -> ~1.5%
+    },
+    retryBtnText: {
+      color: C.muted,
+      fontSize: wp(3.2),                  // 13 -> ~3.2%
+      fontWeight: "600",
+    },
 });
 
 export default ResultScreen;

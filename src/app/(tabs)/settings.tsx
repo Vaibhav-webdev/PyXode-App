@@ -1,26 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Switch,
-  TouchableOpacity,
-  Image,
-  StatusBar,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useUser } from '@clerk/expo';
-import { TextInput } from 'react-native';
-import { Modal, Alert, ActivityIndicator } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { useAuth } from '@clerk/expo';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
+import { useSettings } from '@/context/SwitchContext';
 import { SoundManager } from '@/hooks/SoundManager';
+import { useAuth, useUser } from '@clerk/expo';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import { LogOut } from "lucide-react-native";
+import { hp, wp } from '@/utils/wp_hp';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity, Vibration, View
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Aapka diya hua Color Schema
 const COLORS = {
   bg: "#000000",
   card: "#131313",
@@ -39,17 +41,28 @@ const COLORS = {
 
 const SettingsScreen = () => {
   const { user }: any = useUser();
+  const { vibrationEnabled, setVibrationEnabled, notificationsEnabled, setNotificationsEnabled, soundEnabled, setSoundEnabled } = useSettings();
   const { signOut } = useAuth();
   const router = useRouter();
-  // Local States for Settings
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [vibrationEnabled, setVibrationEnabled] = useState(true);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
   // Load Settings from AsyncStorage on Mount
   useEffect(() => {
     loadSettings();
   }, []);
+
+  const openLogoutModal = async () => {
+    if (vibrationEnabled) {
+        
+      }
+    await SoundManager.play("click");
+
+    setLogoutModalVisible(true);
+  };
+
+  const closeLogoutModal = () => {
+      setLogoutModalVisible(false);
+  };
 
   const loadSettings = async () => {
     try {
@@ -68,12 +81,14 @@ const SettingsScreen = () => {
   // Save Settings to AsyncStorage
   const toggleSwitch = async (key: any, value: any) => {
     try {
+        if (vibrationEnabled) {
+        Vibration.vibrate(200)
+      }
       await AsyncStorage.setItem(key, JSON.stringify(value));
-      if (key === 'soundEnabled') setSoundEnabled(value);
-      if (key === 'vibrationEnabled') setVibrationEnabled(value);
-      if (key === 'notificationsEnabled') setNotificationsEnabled(value);
     } catch (e) {
-      console.log('Failed to save settings', e);
+      if (key === 'soundEnabled') setSoundEnabled(!value);
+      if (key === 'vibrationEnabled') setVibrationEnabled(!value);
+      if (key === 'notificationsEnabled') setNotificationsEnabled(!value);
     }
   };
 
@@ -85,13 +100,16 @@ const SettingsScreen = () => {
   };
 
   const handleLogout = async () => {
-    await SoundManager.play('click');
-    try {
-      await signOut();
-      router.push("/(auth)/sign-in");
-    } catch (error) {
-      console.error("Error signing out: ", error);
-    }
+    closeLogoutModal();
+
+    setTimeout(async () => {
+      try {
+        await signOut();
+        router.replace("/(auth)/sign-in");
+      } catch (error) {
+        console.log(error);
+      }
+    }, 220);
   };
   // Edit Profile Modal State
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -107,7 +125,10 @@ const SettingsScreen = () => {
 
   // 1. Gallery se image pick karke Clerk par upload karne ka function
   const pickAndUploadImage = async () => {
-    await SoundManager.play('click');
+    if (vibrationEnabled) {
+                Vibration.vibrate(200)
+              }
+              await SoundManager.play('click');;
     try {
       // Permission maango (agar pehle se na di ho)
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -181,7 +202,13 @@ const SettingsScreen = () => {
           <TouchableOpacity
             style={styles.editButton}
             onPress={async () => {
-              await SoundManager.play('click');
+              if (vibrationEnabled) {
+                Vibration.vibrate(200)
+              }
+              if (vibrationEnabled) {
+                Vibration.vibrate(200)
+              }
+              await SoundManager.play('click');;
               setIsEditModalVisible(true)
             }}
           >
@@ -237,7 +264,9 @@ const SettingsScreen = () => {
           animationType="slide"
           transparent={true}
           visible={isEditModalVisible}
-          onRequestClose={() => setIsEditModalVisible(false)}
+          onRequestClose={() => {
+            setIsEditModalVisible(false)
+          }}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -279,6 +308,60 @@ const SettingsScreen = () => {
                   ) : (
                     <Text style={styles.saveButtonText}>Save Changes</Text>
                   )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          transparent
+          visible={logoutModalVisible}
+          animationType="none"
+        >
+          <View
+            style={[
+              styles.logoutOverlay,
+            ]}
+          >
+            <View
+              style={[
+                styles.logoutCard,
+              ]}
+            >
+              <View style={styles.iconCircle}>
+                <LogOut
+                  size={34}
+                  color="#000"
+                  strokeWidth={2.2}
+                />
+              </View>
+
+              <Text style={styles.logoutTitle}>
+                Sign out?
+              </Text>
+
+              <Text style={styles.logoutSubtitle}>
+                You'll need to sign in again to access your account.
+              </Text>
+
+              <View style={styles.logoutButtons}>
+                <TouchableOpacity
+                  style={styles.cancelButton1}
+                  onPress={closeLogoutModal}
+                >
+                  <Text style={styles.cancelText}>
+                    Stay
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.logoutButton}
+                  onPress={handleLogout}
+                >
+                  <Text style={styles.logoutText}>
+                    Sign Out
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -348,7 +431,11 @@ const SettingsScreen = () => {
               thumbColor={COLORS.bg}
               ios_backgroundColor={COLORS.track}
               onValueChange={async (value) => {
-                await SoundManager.play('click');
+                if (vibrationEnabled) {
+                Vibration.vibrate(200)
+              }
+              await SoundManager.play('click');;
+                setNotificationsEnabled(value)
                 toggleSwitch('notificationsEnabled', value)
               }}
               value={notificationsEnabled}
@@ -366,7 +453,11 @@ const SettingsScreen = () => {
               thumbColor={COLORS.bg}
               ios_backgroundColor={COLORS.track}
               onValueChange={async (value) => {
-                await SoundManager.play('click');
+                if (vibrationEnabled) {
+                Vibration.vibrate(200)
+              }
+              await SoundManager.play('click');;
+                setSoundEnabled(value)
                 toggleSwitch('soundEnabled', value)
               }}
               value={soundEnabled}
@@ -384,7 +475,11 @@ const SettingsScreen = () => {
               thumbColor={COLORS.bg}
               ios_backgroundColor={COLORS.track}
               onValueChange={async (value) => {
-                await SoundManager.play('click');
+                if (vibrationEnabled) {
+                Vibration.vibrate(200)
+              }
+              await SoundManager.play('click');;
+                setVibrationEnabled(value)
                 toggleSwitch('vibrationEnabled', value)
               }}
               value={vibrationEnabled}
@@ -393,7 +488,7 @@ const SettingsScreen = () => {
         </View>
 
         <View style={styles.sectionCard1}>
-          <TouchableOpacity onPress={handleLogout} style={[styles.listItem, styles.noBorder]}>
+          <TouchableOpacity onPress={openLogoutModal} style={[styles.listItem, styles.noBorder]}>
             <View style={styles.leftItem}>
               <Ionicons name="log-out-outline" size={22} color={"#0000"} />
               <Text style={styles.itemText1}>Logout</Text>
@@ -408,307 +503,385 @@ const SettingsScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: COLORS.bg, // Pure Black BG
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: COLORS.bg,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORS.white,
-  },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  // Profile Card
-  profileCard: {
-    backgroundColor: COLORS.card, // #131313
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 25,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder, // #262626
-  },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: COLORS.track, // Dark gray placeholder
-  },
-  profileInfo: {
-    marginLeft: 15,
-    flex: 1,
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.white,
-    marginBottom: 4,
-  },
-  userRole: {
-    fontSize: 14,
-    color: COLORS.textSecondary, // #9A9A9E
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 13,
-    color: COLORS.textTertiary, // #5C5C60
-  },
-  profileStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.pill, // #08081b
-    borderWidth: 1,
-    borderColor: COLORS.pillBorder, // #2A2A2A
-    padding: 12,
-    borderRadius: 10,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  statText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginLeft: 6,
-    fontWeight: '500',
-  },
-  statText1: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginRight: 6,
-    marginLeft: 4,
-    fontWeight: '500',
-  },
-  statDivider: {
-    width: 1,
-    height: 20,
-    backgroundColor: COLORS.line, // #3A3A3A
-    marginHorizontal: 10,
-  },
-  // Sections
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.textSecondary,
-    marginBottom: 10,
-    marginLeft: 4,
-    letterSpacing: 0.5,
-  },
-  sectionCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    marginBottom: 25,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-  },
-  sectionCard1: {
-    display: "flex",
-    justifyContent: 'center',
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    marginBottom: 25,
-    borderWidth: 1,
-    borderColor: "#ffffff34",
-  },
-  // Status Modal Styles
-  statusModalContent: {
-    width: '80%',
-    backgroundColor: COLORS.card, // #131313
-    borderRadius: 20,
-    padding: 25,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder, // #262626
-  },
-  statusIconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: COLORS.line,
-  },
-  statusTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.white,
-    marginBottom: 8,
-  },
-  statusMessage: {
-    fontSize: 15,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    marginBottom: 25,
-    lineHeight: 22,
-  },
-  statusButton: {
-    width: '100%',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statusButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  listItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.line, // #3A3A3A
-  },
-  noBorder: {
-    borderBottomWidth: 0,
-  },
-  leftItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  itemText: {
-    fontSize: 16,
-    color: COLORS.white,
-    marginLeft: 15,
-  },
-  itemText1: {
-    fontSize: 16,
-    fontWeight: 'black',
-    color: "#000000",
-    marginLeft: 10,
-  },
-  rightRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rightText: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginRight: 8,
-  },
-  // Profile Card ke naye styles
-  avatarContainer: {
-    position: 'relative',
-    width: 70,
-    height: 70,
-  },
-  cameraIconContainer: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: COLORS.cardBorder, // Dark gray (#262626)
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: COLORS.card, // Taaki image se blend ho jaye
-  },
-  editButton: {
-    position: 'absolute',
-    top: 15,
-    right: 15,
-    backgroundColor: COLORS.pill, // #1C1C1E
-    padding: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    zIndex: 10,
-    borderColor: COLORS.cardBorder, // #262626
-  },
-
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Dark overlay
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    width: '100%',
-    backgroundColor: COLORS.sheetBg, // #161616
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: COLORS.white,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  inputLabel: {
-    color: COLORS.textSecondary,
-    fontSize: 14,
-    marginBottom: 8,
-    marginTop: 10,
-  },
-  textInput: {
-    backgroundColor: COLORS.bg, // Pure black input field
-    color: COLORS.white,
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: COLORS.line,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 25,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    backgroundColor: COLORS.pill,
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: COLORS.line,
-  },
-  cancelButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    backgroundColor: COLORS.white, // White button for contrast
-  },
-  saveButtonText: {
-    color: COLORS.bg, // Black text
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+      flex: 1,
+      backgroundColor: COLORS.bg,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: wp(5),     // 20 -> ~5%
+      paddingVertical: hp(1.8),     // 15 -> ~1.8%
+      backgroundColor: COLORS.bg,
+    },
+    headerTitle: {
+      fontSize: wp(7),              // 28 -> ~7%
+      fontWeight: 'bold',
+      color: COLORS.white,
+    },
+    scrollView: {
+      flex: 1,
+      paddingHorizontal: wp(5),     // 20 -> ~5%
+    },
+    // Profile Card
+    profileCard: {
+      backgroundColor: COLORS.card,
+      borderRadius: wp(4),          // 16 -> ~4%
+      padding: wp(5),               // 20 -> ~5%
+      marginBottom: hp(3),          // 25 -> ~3%
+      borderWidth: 1,               // Fixed
+      borderColor: COLORS.cardBorder,
+    },
+    profileHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: hp(2.5),        // 20 -> ~2.5%
+    },
+    avatar: {
+      width: wp(17.5),              // 70 -> ~17.5% (Square/Circle ke liye width use karo)
+      height: wp(17.5),             // 70 -> ~17.5%
+      borderRadius: wp(8.75),       // 35 -> half of width for perfect circle
+      backgroundColor: COLORS.track,
+    },
+    profileInfo: {
+      marginLeft: wp(3.7),          // 15 -> ~3.7%
+      flex: 1,
+    },
+    userName: {
+      fontSize: wp(5),              // 20 -> ~5%
+      fontWeight: 'bold',
+      color: COLORS.white,
+      marginBottom: hp(0.5),        // 4 -> ~0.5%
+    },
+    userRole: {
+      fontSize: wp(3.5),            // 14 -> ~3.5%
+      color: COLORS.textSecondary,
+      fontWeight: '600',
+      marginBottom: hp(0.5),        // 4 -> ~0.5%
+    },
+    userEmail: {
+      fontSize: wp(3.2),            // 13 -> ~3.2%
+      color: COLORS.textTertiary,
+    },
+    profileStats: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: COLORS.pill,
+      borderWidth: 1,               // Fixed
+      borderColor: COLORS.pillBorder,
+      padding: wp(3),               // 12 -> ~3%
+      borderRadius: wp(2.5),        // 10 -> ~2.5%
+    },
+    statItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    statText: {
+      fontSize: wp(3),              // 12 -> ~3%
+      color: COLORS.textSecondary,
+      marginLeft: wp(1.5),          // 6 -> ~1.5%
+      fontWeight: '500',
+    },
+    statText1: {
+      fontSize: wp(3),              // 12 -> ~3%
+      color: COLORS.textSecondary,
+      marginRight: wp(1.5),         // 6 -> ~1.5%
+      marginLeft: wp(1),            // 4 -> ~1%
+      fontWeight: '500',
+    },
+    statDivider: {
+      width: 1,                     // Fixed (border width jaisa)
+      height: hp(2.5),              // 20 -> ~2.5%
+      backgroundColor: COLORS.line,
+      marginHorizontal: wp(2.5),    // 10 -> ~2.5%
+    },
+    // Sections
+    sectionTitle: {
+      fontSize: wp(3.2),            // 13 -> ~3.2%
+      fontWeight: '700',
+      color: COLORS.textSecondary,
+      marginBottom: hp(1.2),        // 10 -> ~1.2%
+      marginLeft: wp(1),            // 4 -> ~1%
+      letterSpacing: wp(0.12),      // 0.5 -> ~0.12%
+    },
+    sectionCard: {
+      backgroundColor: COLORS.card,
+      borderRadius: wp(4),          // 16 -> ~4%
+      paddingHorizontal: wp(5),     // 20 -> ~5%
+      marginBottom: hp(3),          // 25 -> ~3%
+      borderWidth: 1,               // Fixed
+      borderColor: COLORS.cardBorder,
+    },
+    sectionCard1: {
+      display: "flex",
+      justifyContent: 'center',
+      alignItems: "center",
+      backgroundColor: "#ffffff",
+      borderRadius: wp(4),          // 16 -> ~4%
+      paddingHorizontal: wp(5),     // 20 -> ~5%
+      marginBottom: hp(3),          // 25 -> ~3%
+      borderWidth: 1,               // Fixed
+      borderColor: "#ffffff34",
+    },
+    // Status Modal Styles
+    statusModalContent: {
+      width: '80%',                 // % string rehne do, RN khud handle karta hai
+      backgroundColor: COLORS.card,
+      borderRadius: wp(5),          // 20 -> ~5%
+      padding: wp(6.2),             // 25 -> ~6.2%
+      alignItems: 'center',
+      borderWidth: 1,               // Fixed
+      borderColor: COLORS.cardBorder,
+    },
+    statusIconCircle: {
+      width: wp(15),                // 60 -> ~15% (Circle)
+      height: wp(15),               // 60 -> ~15%
+      borderRadius: wp(7.5),        // 30 -> half of width
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: hp(1.8),        // 15 -> ~1.8%
+      borderWidth: 1,               // Fixed
+      borderColor: COLORS.line,
+    },
+    logoutOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.45)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: wp(6),               // 24 -> ~6%
+    },
+    logoutCard: {
+      width: "100%",
+      backgroundColor: "#131313",
+      borderRadius: wp(7),          // 28 -> ~7%
+      paddingHorizontal: wp(6),     // 24 -> ~6%
+      paddingVertical: hp(3.5),     // 28 -> ~3.5%
+      alignItems: "center",
+      shadowColor: "#ffffff",
+      shadowOpacity: 0.18,
+      shadowRadius: 20,             // Shadows ko fixed rehne do
+      shadowOffset: {
+        width: 0,
+        height: 10,                 // Shadows ko fixed rehne do
+      },
+      elevation: 12,                // Fixed
+    },
+    iconCircle: {
+      width: wp(19.5),              // 78 -> ~19.5% (Circle)
+      height: wp(19.5),             // 78 -> ~19.5%
+      borderRadius: wp(9.75),       // 39 -> half of width
+      backgroundColor: "#F5F5F5",
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: hp(2.5),        // 20 -> ~2.5%
+    },
+    logoutTitle: {
+      fontSize: wp(6),              // 24 -> ~6%
+      fontWeight: "700",
+      color: "#ffffff",
+    },
+    logoutSubtitle: {
+      marginTop: hp(1.2),           // 10 -> ~1.2%
+      textAlign: "center",
+      color: "#666",
+      fontSize: wp(3.7),            // 15 -> ~3.7%
+      lineHeight: wp(5.5),          // 22 -> ~5.5%
+      paddingHorizontal: wp(2),     // 8 -> ~2%
+    },
+    logoutButtons: {
+      flexDirection: "row",
+      marginTop: hp(3.5),           // 28 -> ~3.5%
+      width: "100%",
+    },
+    cancelButton1: {
+      flex: 1,
+      height: hp(6.5),              // 52 -> ~6.5%
+      borderRadius: wp(3.5),        // 14 -> ~3.5%
+      borderWidth: 1,               // Fixed
+      backgroundColor: "#FFFFFF",
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: wp(2.5),         // 10 -> ~2.5%
+    },
+    logoutButton: {
+      flex: 1,
+      height: hp(6.5),              // 52 -> ~6.5%
+      borderRadius: wp(3.5),        // 14 -> ~3.5%
+      borderWidth: 1,               // Fixed
+      borderColor: "#c4c4c4",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    cancelText: {
+      color: "#000",
+      fontWeight: "600",
+      fontSize: wp(4),              // 16 -> ~4%
+    },
+    logoutText: {
+      color: "#fff",
+      fontWeight: "700",
+      fontSize: wp(4),              // 16 -> ~4%
+    },
+    statusTitle: {
+      fontSize: wp(5),              // 20 -> ~5%
+      fontWeight: 'bold',
+      color: COLORS.white,
+      marginBottom: hp(1),          // 8 -> ~1%
+    },
+    statusMessage: {
+      fontSize: wp(3.7),            // 15 -> ~3.7%
+      color: COLORS.textSecondary,
+      textAlign: 'center',
+      marginBottom: hp(3),          // 25 -> ~3%
+      lineHeight: wp(5.5),          // 22 -> ~5.5%
+    },
+    statusButton: {
+      width: '100%',
+      paddingVertical: hp(1.7),     // 14 -> ~1.7%
+      borderRadius: wp(3),          // 12 -> ~3%
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    statusButtonText: {
+      fontSize: wp(4),              // 16 -> ~4%
+      fontWeight: 'bold',
+    },
+    listItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: hp(1.8),     // 15 -> ~1.8%
+      borderBottomWidth: 1,         // Fixed
+      borderBottomColor: COLORS.line,
+    },
+    noBorder: {
+      borderBottomWidth: 0,         // Fixed
+    },
+    leftItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    itemText: {
+      fontSize: wp(4),              // 16 -> ~4%
+      color: COLORS.white,
+      marginLeft: wp(3.7),          // 15 -> ~3.7%
+    },
+    itemText1: {
+      fontSize: wp(4),              // 16 -> ~4%
+      fontWeight: 'black',
+      color: "#000000",
+      marginLeft: wp(2.5),          // 10 -> ~2.5%
+    },
+    rightRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    rightText: {
+      fontSize: wp(3.5),            // 14 -> ~3.5%
+      color: COLORS.textSecondary,
+      marginRight: wp(2),           // 8 -> ~2%
+    },
+    // Profile Card ke naye styles
+    avatarContainer: {
+      position: 'relative',
+      width: wp(17.5),              // 70 -> ~17.5% (Square)
+      height: wp(17.5),             // 70 -> ~17.5%
+    },
+    cameraIconContainer: {
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      backgroundColor: COLORS.cardBorder,
+      borderRadius: wp(3),          // 12 -> ~3% (Small square/circle)
+      width: wp(6),                 // 24 -> ~6%
+      height: wp(6),                // 24 -> ~6%
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,               // Fixed
+      borderColor: COLORS.card,
+    },
+    editButton: {
+      position: 'absolute',
+      top: hp(1.8),                 // 15 -> ~1.8%
+      right: wp(3.7),               // 15 -> ~3.7%
+      backgroundColor: COLORS.pill,
+      padding: wp(2),               // 8 -> ~2%
+      borderRadius: wp(2),          // 8 -> ~2%
+      borderWidth: 1,               // Fixed
+      zIndex: 10,
+      borderColor: COLORS.cardBorder,
+    },
+    // Modal Styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: wp(5),               // 20 -> ~5%
+    },
+    modalContent: {
+      width: '100%',
+      backgroundColor: COLORS.sheetBg,
+      borderRadius: wp(4),          // 16 -> ~4%
+      padding: wp(5),               // 20 -> ~5%
+      borderWidth: 1,               // Fixed
+      borderColor: COLORS.cardBorder,
+    },
+    modalTitle: {
+      fontSize: wp(5.5),            // 22 -> ~5.5%
+      fontWeight: 'bold',
+      color: COLORS.white,
+      marginBottom: hp(2.5),        // 20 -> ~2.5%
+      textAlign: 'center',
+    },
+    inputLabel: {
+      color: COLORS.textSecondary,
+      fontSize: wp(3.5),            // 14 -> ~3.5%
+      marginBottom: hp(1),          // 8 -> ~1%
+      marginTop: hp(1.2),           // 10 -> ~1.2%
+    },
+    textInput: {
+      backgroundColor: COLORS.bg,
+      color: COLORS.white,
+      paddingVertical: hp(1.5),     // 12 -> ~1.5%
+      paddingHorizontal: wp(3.7),   // 15 -> ~3.7%
+      borderRadius: wp(2.5),        // 10 -> ~2.5%
+      fontSize: wp(4),              // 16 -> ~4%
+      borderWidth: 1,               // Fixed
+      borderColor: COLORS.line,
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: hp(3),             // 25 -> ~3%
+    },
+    modalButton: {
+      flex: 1,
+      paddingVertical: hp(1.7),     // 14 -> ~1.7%
+      borderRadius: wp(2.5),        // 10 -> ~2.5%
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cancelButton: {
+      backgroundColor: COLORS.pill,
+      marginRight: wp(2.5),         // 10 -> ~2.5%
+      borderWidth: 1,               // Fixed
+      borderColor: COLORS.line,
+    },
+    cancelButtonText: {
+      color: COLORS.white,
+      fontSize: wp(4),              // 16 -> ~4%
+      fontWeight: '600',
+    },
+    saveButton: {
+      backgroundColor: COLORS.white,
+    },
+    saveButtonText: {
+      color: COLORS.bg,
+      fontSize: wp(4),              // 16 -> ~4%
+      fontWeight: 'bold',
+    },
 });
 
 export default SettingsScreen;

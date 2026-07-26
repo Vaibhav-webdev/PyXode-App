@@ -1,23 +1,13 @@
 import { useSignIn } from "@clerk/expo";
-import { Ionicons } from "@expo/vector-icons";
-import { Link, useRouter } from "expo-router";
-import { StyleSheet } from "react-native";
-import { Platform } from "react-native";
 import { Image } from "expo-image";
-import { ScrollView } from "react-native";
-import React, { useState } from "react";
-import { Mail, Lock, Eye, Home } from "lucide-react-native";
-import {
-  Pressable,
-  TextInput,
-  View,
-  Text,
-  ActivityIndicator,
-  TouchableOpacity
-} from "react-native";
+import { Link, useRouter } from "expo-router";
+import { Eye, Lock, Mail } from "lucide-react-native";
+import { useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AuthModal from "../../components/AuthModal"
-import GoogleSignInButton from "../../components/GoogleSignInButton"
+import AuthModal from "../../components/AuthModal";
+import GoogleSignInButton from "../../components/GoogleSignInButton";
+import { hp, wp } from '../../utils/wp_hp';
 
 export default function Page() {
   const { signIn } = useSignIn()
@@ -288,199 +278,199 @@ export default function Page() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#121212",
-    paddingHorizontal: 28,
-    paddingTop: 30,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingBottom: 40,
-  },
-  backButton: {
-    marginBottom: 20,
-    alignSelf: 'flex-start',
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  logoPlaceholder1: {
-    width: 110,
-    height: 110,
-    borderRadius: 50,
-    backgroundColor: "#1A1A1A",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  logoPlaceholder: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: "#0e0e0e",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logoImage: {
-    width: 56,
-    height: 56,
-  },
-  brandName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginBottom: 4,
-  },
-  tagline: {
-    fontSize: 12,
-    color: "#888888",
-    fontStyle: "italic",
-  },
-  titleContainer: {
-    marginBottom: 30,
-  },
-  verifyTitleContainer: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  mainTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: "#A0A0A0",
-    lineHeight: 22,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  passwordContainer: {
-    marginBottom: 20,
-  },
-  passwordHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  label: {
-    color: "#CCCCCC",
-    fontSize: 12,
-    fontWeight: "500",
-    marginBottom: 8,
-  },
-  forgotText: {
-    color: "#A0A0A0",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    backgroundColor: "#1A1A1A",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#2A2A2A",
-    paddingHorizontal: 14,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 16,
-    color: "#FFFFFF",
-    fontSize: 13,
-  },
-  inputWithTrailingIcon: {
-    paddingRight: 6,
-  },
-  trailingIcon: {
-    padding: 6,
-  },
-  primaryButton: {
-    width: "100%",
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    marginBottom: 20,
-  },
-  primaryButtonDisabled: {
-    backgroundColor: "#3D3D3D",
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  primaryButtonText: {
-    color: "#000000",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#2A2A2A",
-  },
-  dividerText: {
-    color: "#666666",
-    fontSize: 10,
-    marginHorizontal: 12,
-  },
-  googleButton: {
-    flexDirection: "row",
-    width: "100%",
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "#333333",
-    marginBottom: 30,
-  },
-  googleButtonText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  footerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  footerText: {
-    color: "#888888",
-  },
-  footerLink: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-  },
-  codeInputContainer: {
-    marginBottom: 20,
-  },
-  codeInput: {
-    width: "100%",
-    backgroundColor: "#1A1A1A",
-    padding: 16,
-    borderRadius: 14,
-    color: "#FFFFFF",
-    fontSize: 22,
-    textAlign: "center",
-    letterSpacing: 8,
-    borderWidth: 1,
-    borderColor: "#2A2A2A",
-  },
+   container: {
+      flex: 1,
+      backgroundColor: "#121212",
+      paddingHorizontal: wp(7),     // 28 -> ~7%
+      paddingTop: hp(3.7),          // 30 -> ~3.7%
+    },
+    scrollContent: {
+      flexGrow: 1,
+      justifyContent: "center",
+      paddingBottom: hp(5),         // 40 -> ~5%
+    },
+    backButton: {
+      marginBottom: hp(2.5),       // 20 -> ~2.5%
+      alignSelf: 'flex-start',
+    },
+    logoContainer: {
+      alignItems: "center",
+      marginBottom: hp(3.7),       // 30 -> ~3.7%
+    },
+    logoPlaceholder1: {
+      width: wp(27.5),             // 110 -> ~27.5% (Circle)
+      height: wp(27.5),            // 110 -> ~27.5%
+      borderRadius: wp(13.75),     // 50 -> ~half of width for circle shape
+      backgroundColor: "#1A1A1A",
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: hp(1.5),       // 12 -> ~1.5%
+    },
+    logoPlaceholder: {
+      width: wp(22.5),             // 90 -> ~22.5% (Circle)
+      height: wp(22.5),            // 90 -> ~22.5%
+      borderRadius: wp(11.25),     // 45 -> ~half of width
+      backgroundColor: "#0e0e0e",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    logoImage: {
+      width: wp(14),               // 56 -> ~14% (Square)
+      height: wp(14),              // 56 -> ~14%
+    },
+    brandName: {
+      fontSize: wp(6),             // 20 -> ~5%
+      fontWeight: "bold",
+      color: "#FFFFFF",
+      marginBottom: hp(0.5),       // 4 -> ~0.5%
+    },
+    tagline: {
+      fontSize: wp(4),             // 12 -> ~3%
+      color: "#888888",
+      fontStyle: "italic",
+    },
+    titleContainer: {
+      marginBottom: hp(3.7),       // 30 -> ~3.7%
+    },
+    verifyTitleContainer: {
+      alignItems: "center",
+      marginBottom: hp(3.7),       // 30 -> ~3.7%
+    },
+    mainTitle: {
+      fontSize: wp(7.5),           // 22 -> ~5.5%
+      fontWeight: "bold",
+      color: "#FFFFFF",
+      marginBottom: hp(0.5),         // 8 -> ~1%
+    },
+    subtitle: {
+      fontSize: wp(4),           // 13 -> ~3.2%
+      color: "#A0A0A0",
+      lineHeight: wp(5.5),         // 22 -> ~5.5%
+    },
+    inputContainer: {
+      marginBottom: hp(2.5),       // 20 -> ~2.5%
+    },
+    passwordContainer: {
+      marginBottom: hp(2.5),       // 20 -> ~2.5%
+    },
+    passwordHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: hp(1),         // 8 -> ~1%
+    },
+    label: {
+      color: "#CCCCCC",
+      fontSize: wp(3),             // 12 -> ~3%
+      fontWeight: "500",
+      marginBottom: hp(1),         // 8 -> ~1%
+    },
+    forgotText: {
+      color: "#A0A0A0",
+      fontSize: wp(3),             // 12 -> ~3%
+      fontWeight: "600",
+    },
+    inputWrapper: {
+      flexDirection: "row",
+      alignItems: "center",
+      width: "100%",               // % string original hi best hai
+      backgroundColor: "#1A1A1A",
+      borderRadius: wp(3.5),       // 14 -> ~3.5%
+      borderWidth: 1,              // Fixed
+      borderColor: "#2A2A2A",
+      paddingHorizontal: wp(3.5),  // 14 -> ~3.5%
+    },
+    inputIcon: {
+      marginRight: wp(2.5),        // 10 -> ~2.5%
+    },
+    input: {
+      flex: 1,
+      paddingVertical: hp(2),      // 16 -> ~2%
+      color: "#FFFFFF",
+      fontSize: wp(3.2),           // 13 -> ~3.2%
+    },
+    inputWithTrailingIcon: {
+      paddingRight: wp(1.5),       // 6 -> ~1.5%
+    },
+    trailingIcon: {
+      padding: wp(1.5),            // 6 -> ~1.5%
+    },
+    primaryButton: {
+      width: "100%",               // % string original hi best hai
+      paddingVertical: hp(2),      // 16 -> ~2%
+      borderRadius: wp(3.5),       // 14 -> ~3.5%
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#FFFFFF",
+      marginBottom: hp(2.5),       // 20 -> ~2.5%
+    },
+    primaryButtonDisabled: {
+      backgroundColor: "#3D3D3D",
+    },
+    pressed: {
+      opacity: 0.85,
+    },
+    primaryButtonText: {
+      color: "#000000",
+      fontWeight: "bold",
+      fontSize: wp(3.5),           // 14 -> ~3.5%
+    },
+    dividerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: hp(2.5),       // 20 -> ~2.5%
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,                   // Fixed (Divider lines ko responsive nahi karna chahiye)
+      backgroundColor: "#2A2A2A",
+    },
+    dividerText: {
+      color: "#666666",
+      fontSize: wp(2.5),           // 10 -> ~2.5%
+      marginHorizontal: wp(3),     // 12 -> ~3%
+    },
+    googleButton: {
+      flexDirection: "row",
+      width: "100%",
+      paddingVertical: hp(2),      // 16 -> ~2%
+      borderRadius: wp(3.5),       // 14 -> ~3.5%
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "transparent",
+      borderWidth: 1,              // Fixed
+      borderColor: "#333333",
+      marginBottom: hp(3.7),       // 30 -> ~3.7%
+    },
+    googleButtonText: {
+      color: "#FFFFFF",
+      fontSize: wp(3.2),           // 13 -> ~3.2%
+      fontWeight: "500",
+    },
+    footerContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+    },
+    footerText: {
+      color: "#888888",
+    },
+    footerLink: {
+      color: "#FFFFFF",
+      fontWeight: "bold",
+    },
+    codeInputContainer: {
+      marginBottom: hp(2.5),       // 20 -> ~2.5%
+    },
+    codeInput: {
+      width: "100%",
+      backgroundColor: "#1A1A1A",
+      padding: wp(4),              // 16 -> ~4%
+      borderRadius: wp(3.5),       // 14 -> ~3.5%
+      color: "#FFFFFF",
+      fontSize: wp(5.5),           // 22 -> ~5.5% (OTP text thoda bada hota hai)
+      textAlign: "center",
+      letterSpacing: wp(2),        // 8 -> ~2% (OTP ke letters ke beech ki space)
+      borderWidth: 1,              // Fixed
+      borderColor: "#2A2A2A",
+    },
 });
