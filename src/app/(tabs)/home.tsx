@@ -3,7 +3,7 @@ import { TabKey, TABS, TopicContent, TOPICS_BY_TAB } from "@/data/topics";
 import { getTopicIcon } from "@/data/topics/iconMap";
 import { SoundManager } from "@/hooks/SoundManager";
 import { getAllProgress, TopicProgress } from "@/utils/progressStorage";
-import { useUser } from "@clerk/expo";
+// import { useUser } from "@clerk/expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSettings } from "@/context/SwitchContext";
 import { Vibration } from "react-native";
@@ -245,9 +245,9 @@ const AvatarPickerSheet = ({
 // ---------------------------------------------------------------------------
 export default function HomeScreen() {
 
-  const { user } = useUser();
+  // const { user } = useUser();
   const router = useRouter();
-  const firstName = user?.firstName ?? "there";
+  // const firstName = user?.firstName ?? "there";
 
   const [avatarId, setAvatarId] = useState<AvatarId>("girl1");
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -319,7 +319,7 @@ export default function HomeScreen() {
         {/* Greeting */}
         <View style={styles.greetingRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.greetingTitle}>Hi, {firstName}!</Text>
+            <Text style={styles.greetingTitle}>Hi, Admin!</Text>
             <Text style={styles.greetingSubtitle}>
               Let's continue your learning{"\n"}journey in Python.
             </Text>

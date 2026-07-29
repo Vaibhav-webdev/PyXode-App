@@ -3,7 +3,6 @@ import { BASIC_TOPICS } from "./basic";
 import { AIML_TOPICS } from "./aiml";
 import { DATA_SCIENCE_TOPICS } from "./dataScience";
 import { WEB_DEV_TOPICS } from "./webDev";
-import { APP_DEV_TOPICS } from "./appDev";
 import { DSA_TOPICS } from "./dsa";
 import { AUTOMATIONSCRIPTING_TOPICS } from "./automationScripting";
 

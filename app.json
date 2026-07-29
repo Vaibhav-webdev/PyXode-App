@@ -25,7 +25,6 @@
     },
     "plugins": [
       "expo-secure-store",
-      "@clerk/expo",
       "expo-router",
       [
         "expo-splash-screen",
@@ -41,7 +40,8 @@
       "expo-status-bar",
       "expo-video",
       "expo-audio",
-      "expo-asset"
+      "expo-asset",
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -51,9 +51,7 @@
       "router": {},
       "eas": {
         "projectId": "ec37ce37-4306-4f00-b30e-cd6a94d6e746"
-      },
-      "EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID": "1033491632620-nlmadm7kebccnmcflacprc02gun54s68.apps.googleusercontent.com",
-      "EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID": "1033491632620-hd0hs4520vo3ok5iansno5fdocf22i3v.apps.googleusercontent.com"
+      }
     }
   }
 }
