@@ -23,6 +23,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { useWindowDimensions } from "react-native";
+import { getSession, clearSession, UserProfile } from '@/utils/authStorage';
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const H_PADDING = 20;
@@ -244,8 +245,7 @@ const AvatarPickerSheet = ({
 // Screen
 // ---------------------------------------------------------------------------
 export default function HomeScreen() {
-
-  // const { user } = useUser();
+  const [user, setUser] = useState<any>(null);
   const router = useRouter();
   // const firstName = user?.firstName ?? "there";
 
@@ -269,6 +269,17 @@ export default function HomeScreen() {
 
     loadData();
   }, []); // Empty array ka matlab hai ye sirf ek baar chalega jab screen load hogi
+
+  useEffect(() => {
+    // App Local Storage se user details fetch karein
+    async function loadUserData() {
+      const { user } = await getSession();
+      if (user) {
+        setUser(user);
+      }
+    }
+    loadUserData();
+  }, []);
 
   const handleSelectAvatar = async (id: AvatarId) => {
     setAvatarId(id);
@@ -319,7 +330,7 @@ export default function HomeScreen() {
         {/* Greeting */}
         <View style={styles.greetingRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.greetingTitle}>Hi, Admin!</Text>
+            <Text style={styles.greetingTitle}>Hi, {user?.name}!</Text>
             <Text style={styles.greetingSubtitle}>
               Let's continue your learning{"\n"}journey in Python.
             </Text>
