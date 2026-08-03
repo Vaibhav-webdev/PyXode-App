@@ -38,10 +38,8 @@
       "expo-sqlite",
       "expo-image",
       "expo-status-bar",
-      "expo-video",
       "expo-audio",
       "expo-asset",
-      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,

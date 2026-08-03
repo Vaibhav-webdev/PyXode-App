@@ -8,24 +8,14 @@ import {
     StatusBar,
     Dimensions,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
 export default function OnboardingScreen() {
-    const router = useRouter();
+    const router = useRouter()
 
-    const handlePress = async () => {
-        try {
-            await AsyncStorage.setItem('isNew', 'false');
-            router.replace('/(auth)/PersonalizeScreen')
-        } catch (error) {
-            null
-        }
-    };
     return (
         <SafeAreaView style={styles.safeArea}>
             <StatusBar barStyle="light-content" backgroundColor="#000000" />
@@ -38,13 +28,6 @@ export default function OnboardingScreen() {
                         style={styles.heroImage}
                         resizeMode="contain"
                     />
-                </View>
-
-                {/* Pagination dots */}
-                <View style={styles.pagination}>
-                    <View style={[styles.dot, styles.dotActive]} />
-                    <View style={styles.dot} />
-                    <View style={styles.dot} />
                 </View>
 
                 {/* Text content */}
@@ -62,7 +45,9 @@ export default function OnboardingScreen() {
                 <TouchableOpacity
                     style={styles.button}
                     activeOpacity={0.85}
-                    onPress={handlePress}
+                    onPress={() => {
+                        router.replace("/(auth)/name_input")
+                    }}
                 >
                     <Text style={styles.buttonText}>Continue</Text>
                 </TouchableOpacity>

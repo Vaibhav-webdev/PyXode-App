@@ -43,10 +43,23 @@ export function SettingsProvider({
       const vibration = await AsyncStorage.getItem("vibrationEnabled");
       const notification = await AsyncStorage.getItem("notificationsEnabled");
 
-      if (sound !== null) setSound(sound === "true");
-      if (vibration !== null) setVibration(vibration === "true");
-      if (notification !== null)
+      if (sound === null) {
+        await AsyncStorage.setItem("soundEnabled", "true");
+        setSound(true);
+      } else {
+        setSound(sound === "true");
+      }
+
+      if (vibration === null) {
+        await AsyncStorage.setItem("vibrationEnabled", "true");
+        setVibration(true);
+      } else {
+        setVibration(vibration === "true");
+      }
+
+      if (notification !== null) {
         setNotifications(notification === "true");
+      }
     } catch (e) {
       console.log(e);
     } finally {

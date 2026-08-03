@@ -1,17 +1,12 @@
 import { useSettings } from '@/context/SwitchContext';
 import { SoundManager } from '@/hooks/SoundManager';
+import { hp, wp } from '@/utils/wp_hp';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { LogOut } from "lucide-react-native";
-import { hp, wp } from '@/utils/wp_hp';
 import { useEffect, useState } from 'react';
-import { getSession, clearSession, UserProfile } from '@/utils/authStorage'
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
   Modal,
   ScrollView,
   StatusBar,
@@ -90,58 +85,21 @@ const SettingsScreen = () => {
     }
   };
 
-  // Format Clerk Date to "12 May 2024"
-  const formatJoinDate = (dateString: any) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  };
-
   const handleLogout = async () => {
     closeLogoutModal();
+
     setTimeout(async () => {
       try {
-          // SecureStore se token & data clear karo
-          await clearSession();
-          // Back to Login Screen
-          router.replace('/continue');
+        await AsyncStorage.removeItem('isNew');
+        await AsyncStorage.removeItem('userName');
+
+        router.replace('/(auth)/onboarding');
       } catch (error) {
-        console.log(error);
+        null
       }
     }, 220);
   };
-  // Edit Profile Modal State
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [firstName, setFirstName] = useState('Admin');
-  const [lastName, setLastName] = useState('Sensei');
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [isStatusModalVisible, setIsStatusModalVisible] = useState(false);
-  const [statusType, setStatusType] = useState('success'); // 'success' ya 'error'
-  const [statusMessage, setStatusMessage] = useState('');
 
-  useEffect(() => {
-    // App Local Storage se user details fetch karein
-    async function loadUserData() {
-      const { user } = await getSession();
-      if (user) {
-        setUser(user);
-      }
-    }
-    loadUserData();
-  }, []);
-
-  // Image Upload State
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-
-  // 1. Gallery se image pick karke Clerk par upload karne ka function
-  const showStatusModal = (type: any, message: any) => {
-    setStatusType(type);
-    setStatusMessage(message);
-    setIsStatusModalVisible(true);
-  };
-
-  // 2. Profile Name update karne ka function
   return (
     <SafeAreaView edges={['left', 'right', 'top']} style={styles.container}>
       {/* Dark Mode ke liye StatusBar ko light karna padega */}
@@ -153,124 +111,6 @@ const SettingsScreen = () => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
-
-        {/* PROFILE SECTION */}
-        <View style={styles.profileCard}>
-
-          {/* Top Right Edit Button */}
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={async () => {
-              if (vibrationEnabled) {
-                Vibration.vibrate(200)
-              }
-              if (vibrationEnabled) {
-                Vibration.vibrate(200)
-              }
-              await SoundManager.play('click');;
-              setIsEditModalVisible(true)
-            }}
-          >
-            <Ionicons name="create-outline" size={20} color={COLORS.white} />
-          </TouchableOpacity>
-
-          <View style={styles.profileHeader}>
-            {/* Image with Camera Icon Overlay */}
-            <View style={styles.avatarContainer}>
-              <Image
-                source={{ uri: 'https://via.placeholder.com/100' }}
-                style={styles.avatar}
-              />
-              <TouchableOpacity
-                style={styles.cameraIconContainer}
-                disabled={isUploadingImage}
-              >
-                {isUploadingImage ? (
-                  <ActivityIndicator size="small" color={COLORS.white} />
-                ) : (
-                  <Ionicons name="camera" size={16} color={COLORS.white} />
-                )}
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.profileInfo}>
-              <Text style={styles.userName}>
-                {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'User Name'}
-              </Text>
-              <Text style={styles.userRole}>Python Learner</Text>
-              <Text style={styles.userEmail}>
-                {user?.email || 'user@example.com'}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.profileStats}>
-            <View style={styles.statItem}>
-              <Ionicons name="calendar-outline" size={16} color={COLORS.textSecondary} />
-              <Text style={styles.statText1}>Joined {formatJoinDate(user?.createdAt)}</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Ionicons name="flame-outline" size={16} color={COLORS.white} />
-              <Text style={styles.statText}>30+ Experience</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* EDIT PROFILE MODAL */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={isEditModalVisible}
-          onRequestClose={() => {
-            setIsEditModalVisible(false)
-          }}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Edit Profile</Text>
-
-              <Text style={styles.inputLabel}>First Name</Text>
-              <TextInput
-                style={styles.textInput}
-                value={firstName}
-                onChangeText={setFirstName}
-                placeholder="Enter first name"
-                placeholderTextColor={COLORS.textTertiary}
-              />
-
-              <Text style={styles.inputLabel}>Last Name</Text>
-              <TextInput
-                style={styles.textInput}
-                value={lastName}
-                onChangeText={setLastName}
-                placeholder="Enter last name"
-                placeholderTextColor={COLORS.textTertiary}
-              />
-
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setIsEditModalVisible(false)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.saveButton]}
-                  disabled={isUpdating}
-                >
-                  {isUpdating ? (
-                    <ActivityIndicator size="small" color={COLORS.bg} />
-                  ) : (
-                    <Text style={styles.saveButtonText}>Save Changes</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-
         <Modal
           transparent
           visible={logoutModalVisible}
@@ -321,55 +161,6 @@ const SettingsScreen = () => {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          </View>
-        </Modal>
-
-        {/* STATUS MODAL (Success / Error) */}
-        <Modal
-          animationType="fade"
-          transparent={true}
-          visible={isStatusModalVisible}
-          onRequestClose={() => setIsStatusModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.statusModalContent}>
-
-              {/* Icon */}
-              <View style={[
-                styles.statusIconCircle,
-                { backgroundColor: statusType === 'success' ? '#1C1C1E' : '#1C1C1E' } // Same bg, color se differentiate karenge
-              ]}>
-                <Ionicons
-                  name={statusType === 'success' ? 'checkmark' : 'close'}
-                  size={32}
-                  color={statusType === 'success' ? '#34C759' : '#FF453A'} // Green for success, Red for error
-                />
-              </View>
-
-              <Text style={styles.statusTitle}>
-                {statusType === 'success' ? 'Success!' : 'Oops!'}
-              </Text>
-
-              <Text style={styles.statusMessage}>
-                {statusMessage}
-              </Text>
-
-              <TouchableOpacity
-                style={[
-                  styles.statusButton,
-                  { backgroundColor: statusType === 'success' ? COLORS.white : '#FF453A' }
-                ]}
-                onPress={() => setIsStatusModalVisible(false)}
-              >
-                <Text style={[
-                  styles.statusButtonText,
-                  { color: statusType === 'success' ? COLORS.bg : COLORS.white }
-                ]}>
-                  {statusType === 'success' ? 'Done' : 'Try Again'}
-                </Text>
-              </TouchableOpacity>
-
             </View>
           </View>
         </Modal>
@@ -444,8 +235,8 @@ const SettingsScreen = () => {
           </View>
         </View>
 
-        <View style={styles.sectionCard1}>
-          <TouchableOpacity onPress={openLogoutModal} style={[styles.listItem, styles.noBorder]}>
+        <View >
+          <TouchableOpacity onPress={openLogoutModal} style={styles.sectionCard1}>
             <View style={styles.leftItem}>
               <Ionicons name="log-out-outline" size={22} color={"#0000"} />
               <Text style={styles.itemText1}>Logout</Text>
@@ -480,79 +271,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: wp(5),     // 20 -> ~5%
   },
-  // Profile Card
-  profileCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: wp(4),          // 16 -> ~4%
-    padding: wp(5),               // 20 -> ~5%
-    marginBottom: hp(3),          // 25 -> ~3%
-    borderWidth: 1,               // Fixed
-    borderColor: COLORS.cardBorder,
-  },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: hp(2.5),        // 20 -> ~2.5%
-  },
-  avatar: {
-    width: wp(17.5),              // 70 -> ~17.5% (Square/Circle ke liye width use karo)
-    height: wp(17.5),             // 70 -> ~17.5%
-    borderRadius: wp(8.75),       // 35 -> half of width for perfect circle
-    backgroundColor: COLORS.track,
-  },
-  profileInfo: {
-    marginLeft: wp(3.7),          // 15 -> ~3.7%
-    flex: 1,
-  },
-  userName: {
-    fontSize: wp(5),              // 20 -> ~5%
-    fontWeight: 'bold',
-    color: COLORS.white,
-    marginBottom: hp(0.5),        // 4 -> ~0.5%
-  },
-  userRole: {
-    fontSize: wp(3.5),            // 14 -> ~3.5%
-    color: COLORS.textSecondary,
-    fontWeight: '600',
-    marginBottom: hp(0.5),        // 4 -> ~0.5%
-  },
-  userEmail: {
-    fontSize: wp(3.2),            // 13 -> ~3.2%
-    color: COLORS.textTertiary,
-  },
-  profileStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.pill,
-    borderWidth: 1,               // Fixed
-    borderColor: COLORS.pillBorder,
-    padding: wp(3),               // 12 -> ~3%
-    borderRadius: wp(2.5),        // 10 -> ~2.5%
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  statText: {
-    fontSize: wp(3),              // 12 -> ~3%
-    color: COLORS.textSecondary,
-    marginLeft: wp(1.5),          // 6 -> ~1.5%
-    fontWeight: '500',
-  },
-  statText1: {
-    fontSize: wp(3),              // 12 -> ~3%
-    color: COLORS.textSecondary,
-    marginRight: wp(1.5),         // 6 -> ~1.5%
-    marginLeft: wp(1),            // 4 -> ~1%
-    fontWeight: '500',
-  },
-  statDivider: {
-    width: 1,                     // Fixed (border width jaisa)
-    height: hp(2.5),              // 20 -> ~2.5%
-    backgroundColor: COLORS.line,
-    marginHorizontal: wp(2.5),    // 10 -> ~2.5%
-  },
   // Sections
   sectionTitle: {
     fontSize: wp(3.2),            // 13 -> ~3.2%
@@ -576,21 +294,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#ffffff",
     borderRadius: wp(4),          // 16 -> ~4%
-    paddingHorizontal: wp(5),     // 20 -> ~5%
+    paddingHorizontal: wp(5),   
+    paddingVertical: wp(3.9),  // 20 -> ~5%
     marginBottom: hp(3),          // 25 -> ~3%
     borderWidth: 1,               // Fixed
     borderColor: "#ffffff34",
   },
   // Status Modal Styles
-  statusModalContent: {
-    width: '80%',                 // % string rehne do, RN khud handle karta hai
-    backgroundColor: COLORS.card,
-    borderRadius: wp(5),          // 20 -> ~5%
-    padding: wp(6.2),             // 25 -> ~6.2%
-    alignItems: 'center',
-    borderWidth: 1,               // Fixed
-    borderColor: COLORS.cardBorder,
-  },
+  
   statusIconCircle: {
     width: wp(15),                // 60 -> ~15% (Circle)
     height: wp(15),               // 60 -> ~15%

@@ -3,11 +3,9 @@ import { TabKey, TABS, TopicContent, TOPICS_BY_TAB } from "@/data/topics";
 import { getTopicIcon } from "@/data/topics/iconMap";
 import { SoundManager } from "@/hooks/SoundManager";
 import { getAllProgress, TopicProgress } from "@/utils/progressStorage";
-// import { useUser } from "@clerk/expo";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSettings } from "@/context/SwitchContext";
-import { Vibration } from "react-native";
 import { hp, wp } from "@/utils/wp_hp";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { LayoutGrid, Lock, Settings } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
@@ -17,13 +15,10 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  View,
+  Text, Vibration, View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-import { useWindowDimensions } from "react-native";
-import { getSession, clearSession, UserProfile } from '@/utils/authStorage';
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const H_PADDING = 20;
@@ -245,16 +240,29 @@ const AvatarPickerSheet = ({
 // Screen
 // ---------------------------------------------------------------------------
 export default function HomeScreen() {
-  const [user, setUser] = useState<any>(null);
   const router = useRouter();
-  // const firstName = user?.firstName ?? "there";
-
   const [avatarId, setAvatarId] = useState<AvatarId>("girl1");
   const [pickerVisible, setPickerVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("basic");
   const [progressMap, setProgressMap] = useState<Record<string, TopicProgress>>({});
+  const [name, setName] = useState('');
+  
+    useEffect(() => {
+      const fetchUserName = async () => {
+        try {
+          const storedName = await AsyncStorage.getItem('userName');
+  
+          if (storedName !== null) {
+            setName(storedName);
+          }
+        } catch (error) {
+          null
+        }
+      };
+  
+      fetchUserName();
+    }, []);
 
-  // Reload progress every time the screen regains focus (e.g. after finishing a topic)
   useEffect(() => {
     const loadData = async () => {
       const all = await getAllProgress();
@@ -268,17 +276,6 @@ export default function HomeScreen() {
     };
 
     loadData();
-  }, []); // Empty array ka matlab hai ye sirf ek baar chalega jab screen load hogi
-
-  useEffect(() => {
-    // App Local Storage se user details fetch karein
-    async function loadUserData() {
-      const { user } = await getSession();
-      if (user) {
-        setUser(user);
-      }
-    }
-    loadUserData();
   }, []);
 
   const handleSelectAvatar = async (id: AvatarId) => {
@@ -330,7 +327,7 @@ export default function HomeScreen() {
         {/* Greeting */}
         <View style={styles.greetingRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.greetingTitle}>Hi, {user?.name}!</Text>
+            <Text style={styles.greetingTitle}>Hi, {name}!</Text>
             <Text style={styles.greetingSubtitle}>
               Let's continue your learning{"\n"}journey in Python.
             </Text>
