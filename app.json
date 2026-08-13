@@ -17,13 +17,25 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.sensei123.pyxode"
+      "package": "com.sensei123.pyxode",
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "com.google.android.gms.permission.AD_ID"
+      ]
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-2990397099587279~3502711402",
+          "delayAppMeasurementInit": true
+        }
+      ],
       "expo-secure-store",
       "expo-router",
       [
@@ -40,6 +52,7 @@
       "expo-status-bar",
       "expo-audio",
       "expo-asset",
+      "react-native-google-mobile-ads"
     ],
     "experiments": {
       "typedRoutes": true,

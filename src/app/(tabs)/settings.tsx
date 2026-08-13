@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { LogOut } from "lucide-react-native";
 import { useEffect, useState } from 'react';
+import BannerAdComponent from '@/components/ads/BannerAdsComponents';
 import {
   Modal,
   ScrollView,
@@ -244,6 +245,7 @@ const SettingsScreen = () => {
           </TouchableOpacity>
         </View>
 
+        <BannerAdComponent />
       </ScrollView>
     </SafeAreaView>
   );
