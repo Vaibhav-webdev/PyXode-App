@@ -7,9 +7,11 @@
     "icon": "./assets/images/icon.png",
     "scheme": "pyxode",
     "userInterfaceStyle": "automatic",
+
     "ios": {
       "icon": "./assets/expo.icon"
     },
+
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -24,11 +26,17 @@
         "com.google.android.gms.permission.AD_ID"
       ]
     },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
+
     "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "2.3.0"
+          }
+        }
+      ],
+
       [
         "react-native-google-mobile-ads",
         {
@@ -36,8 +44,10 @@
           "delayAppMeasurementInit": true
         }
       ],
+
       "expo-secure-store",
       "expo-router",
+
       [
         "expo-splash-screen",
         {
@@ -46,18 +56,20 @@
           "imageWidth": 120
         }
       ],
+
       "expo-web-browser",
       "expo-sqlite",
       "expo-image",
       "expo-status-bar",
       "expo-audio",
-      "expo-asset",
-      "react-native-google-mobile-ads"
+      "expo-asset"
     ],
+
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
+
     "extra": {
       "router": {},
       "eas": {
