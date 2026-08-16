@@ -7,8 +7,10 @@ import { useSettings } from "@/context/SwitchContext";
 import { hp, wp } from "@/utils/wp_hp";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { useRef } from "react";
 import { LayoutGrid, Lock, Settings } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
+import BannerAdComponent_Home from "@/components/ads/BannerAdsComponents_2";
 import {
   Dimensions,
   Modal,
@@ -19,6 +21,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
+import { RewardedAd, RewardedAdEventType, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+
+const rewardedAdUnitId: string = __DEV__ ? TestIds.REWARDED : 'ca-app-pub-2990397099587279/5695993424';
+
+const rewarded = RewardedAd.createForAdRequest(rewardedAdUnitId, {
+  requestNonPersonalizedAdsOnly: true,
+});
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const H_PADDING = 20;
@@ -60,27 +69,23 @@ const AVATAR_OPTIONS: { id: AvatarId; label: string }[] = [
 const LessonCard = ({
   topic,
   progress,
-  locked,
   onPress,
 }: {
   topic: TopicContent;
   progress: number;
-  locked: boolean;
   onPress: () => void;
 }) => (
   <Pressable
-    style={[styles.card, locked && styles.cardLocked]}
+    style={[styles.card]}
     onPress={onPress}
-    disabled={locked}
   >
     <View style={styles.cardTopRow}>
-      <Text style={[styles.cardNumber, locked && { color: COLORS.textTertiary }]}>
+      <Text style={[styles.cardNumber]}>
         {topic.number}
       </Text>
-      {locked && <Lock color={COLORS.textTertiary} size={14} />}
     </View>
     <View style={styles.cardIconWrap}>{getTopicIcon(topic.iconKey)}</View>
-    <Text style={[styles.cardTitle, locked && { color: COLORS.textTertiary }]}>
+    <Text style={[styles.cardTitle]}>
       {topic.title}
     </Text>
     <View style={styles.progressTrack}>
@@ -157,7 +162,7 @@ const SnakeRow = ({
   connectorSide?: "left" | "right";
   showConnectorBelow?: boolean;
   progressMap: Record<string, TopicProgress>;
-  onOpenTopic: (topic: TopicContent, locked: boolean) => void;
+  onOpenTopic: (topic: TopicContent) => void;
 }) => {
   const ordered = reversed ? [...topics].reverse() : topics;
   return (
@@ -166,20 +171,18 @@ const SnakeRow = ({
         {ordered.map((topic, idx) => {
           const globalIndex = topics.indexOf(topic);
           const prevTopic = globalIndex > 0 ? topics[globalIndex - 1] : null;
-          const locked = false;
           const progress = progressMap[topic.id]?.progress ?? 0;
           return (
             <React.Fragment key={topic.id}>
               <LessonCard
                 topic={topic}
                 progress={progress}
-                locked={locked}
                 onPress={async () => {
                   if (vibrationEnabled) {
                     Vibration.vibrate(200)
                   }
                   await SoundManager.play('click');
-                  onOpenTopic(topic, locked)
+                  onOpenTopic(topic)
                 }}
               />
               {idx < ordered.length - 1 && <HorizontalConnector />}
@@ -246,22 +249,22 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState<TabKey>("basic");
   const [progressMap, setProgressMap] = useState<Record<string, TopicProgress>>({});
   const [name, setName] = useState('');
-  
-    useEffect(() => {
-      const fetchUserName = async () => {
-        try {
-          const storedName = await AsyncStorage.getItem('userName');
-  
-          if (storedName !== null) {
-            setName(storedName);
-          }
-        } catch (error) {
-          null
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const storedName = await AsyncStorage.getItem('userName');
+
+        if (storedName !== null) {
+          setName(storedName);
         }
-      };
-  
-      fetchUserName();
-    }, []);
+      } catch (error) {
+        null
+      }
+    };
+
+    fetchUserName();
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -293,9 +296,61 @@ export default function HomeScreen() {
     return chunks;
   }, [activeTopics]);
 
-  const handleOpenTopic = (topic: TopicContent, locked: boolean) => {
-    if (locked) return;
+  const [loaded, setLoaded] = useState<boolean>(false);
+
+  // Dynamic data aur state tracking ke liye Refs
+  const pendingTopicRef = useRef<TopicContent | null>(null);
+  const isRewardedRef = useRef<boolean>(false);
+
+  const navigateToTopic = (topic: TopicContent): void => {
     router.push(`/topic/${topic.id}` as any);
+  };
+
+  // 2. Rewarded Ad Event Listeners Setup
+  useEffect(() => {
+    // Ad Load Event
+    const unsubscribeLoaded = rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => {
+      setLoaded(true);
+    });
+
+    // User ne poora ad dekh liya (Reward earn ho gaya)
+    const unsubscribeEarned = rewarded.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
+      isRewardedRef.current = true;
+    });
+
+    // Ad Screen se Dismiss/Close hone par
+    const unsubscribeClosed = rewarded.addAdEventListener(AdEventType.CLOSED, () => {
+      setLoaded(false);
+
+      // Agar reward mila hai aur target topic available hai
+      if (isRewardedRef.current && pendingTopicRef.current) {
+        navigateToTopic(pendingTopicRef.current);
+      }
+
+      // Cleanup and preload next ad
+      isRewardedRef.current = false;
+      pendingTopicRef.current = null;
+      rewarded.load();
+    });
+
+    rewarded.load();
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeEarned();
+      unsubscribeClosed();
+    };
+  }, []);
+
+  // 3. Main Topic Click Handler
+  const handleOpenTopic = (topic: TopicContent): void => {
+    if (loaded) {
+      pendingTopicRef.current = topic;
+      isRewardedRef.current = false;
+      rewarded.show();
+    } else {
+      rewarded.load();
+    }
   };
 
   const { vibrationEnabled } = useSettings();
@@ -400,6 +455,7 @@ export default function HomeScreen() {
             );
           })}
         </View>
+        <BannerAdComponent_Home />
       </ScrollView>
       <AvatarPickerSheet
         visible={pickerVisible}

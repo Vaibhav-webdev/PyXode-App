@@ -1,9 +1,11 @@
+import BannerAdComponent_Challenge from '@/components/ads/BannerAdsComponents_3';
 import ResultScreen from '@/components/CompletionReward';
 import { useSettings } from '@/context/SwitchContext';
 import { SoundManager } from '@/hooks/SoundManager';
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, Vibration, View } from 'react-native';
+import { InterstitialAd, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, Vibration, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CodeChallenge from '../../components/challenge/CodeChallenge';
 import { generateInterviewPack, INTERVIEW_META, type Challenge } from '../../components/challenge/interview_data';
@@ -12,6 +14,8 @@ import ObjectiveChallenge from '../../components/challenge/ObjectiveChallenge';
 import PyodideRunner, { PyodideRunnerHandle, RunTestResult } from '../../components/challenge/PyodideRunner';
 
 type Phase = 'intro' | 'interview' | 'result';
+const interstitialAdUnitId = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-2990397099587279/8479661754';
+const interstitial = InterstitialAd.createForAdRequest(interstitialAdUnitId, { requestNonPersonalizedAdsOnly: true, });
 
 interface QuestionStatus {
   scoreFraction: number;
@@ -33,7 +37,7 @@ export default function ChallengesScreen() {
       introContainer: {
         flex: 1,
         padding: wp(6),
-        paddingTop: wp(18),
+        paddingTop: wp(10),
         justifyContent: 'center',
         backgroundColor: '#0A0A0A', // Dark Black Theme Background
       },
@@ -122,14 +126,13 @@ export default function ChallengesScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [statuses, setStatuses] = useState<QuestionStatus[]>([]);
   const [canAdvance, setCanAdvance] = useState(false);
-
   const [totalTime, setTotalTime] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
-
   const [pyodideReady, setPyodideReady] = useState(false);
   const pyodideRef = useRef<PyodideRunnerHandle>(null);
-
   const currentChallenge = pack[currentIndex];
+  const [loaded, setLoaded] = useState<boolean>(false);
+  const startInterviewRef = useRef<(() => Promise<void>) | null>(null);
 
   // ── Combined countdown timer ──
   useEffect(() => {
@@ -143,11 +146,11 @@ export default function ChallengesScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, timeLeft]);
 
-  const startInterview = useCallback(async () => {
-    if (vibrationEnabled) Vibration.vibrate(200)
-    await SoundManager.play('click')
+  const executeStartInterview = useCallback(async (): Promise<void> => {
+    if (vibrationEnabled) Vibration.vibrate(200);
+    await SoundManager.play('click');
     const newPack = generateInterviewPack();
-    const total = newPack.reduce((sum: any, q: any) => sum + q.timeLimit, 0);
+    const total = newPack.reduce((sum: number, q: { timeLimit: number }) => sum + q.timeLimit, 0);
     setPack(newPack);
     setStatuses(newPack.map(() => ({ scoreFraction: 0, cleared: false })));
     setCurrentIndex(0);
@@ -155,7 +158,40 @@ export default function ChallengesScreen() {
     setTotalTime(total);
     setTimeLeft(total);
     setPhase('interview');
+  }, [vibrationEnabled]); // Yahan apne required dependencies add karein
+
+  // Sync ref with latest function reference
+  startInterviewRef.current = executeStartInterview;
+
+  // 2. Ad Listeners
+  useEffect(() => {
+    const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+      setLoaded(true);
+    });
+
+    const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+      setLoaded(false);
+      // Ad close hone par interview trigger hoga
+      startInterviewRef.current?.();
+      interstitial.load();
+    });
+
+    interstitial.load();
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeClosed();
+    };
   }, []);
+
+  // 3. Button Click Handler (Isse UI Button ke onPress me dein)
+  const startInterview = (): void => {
+    if (loaded) {
+      interstitial.show();
+    } else {
+      executeStartInterview();
+    }
+  };
 
   const updateStatus = useCallback((index: number, scoreFraction: number) => {
     setStatuses((prev) => {
@@ -232,35 +268,37 @@ export default function ChallengesScreen() {
   const xpReward = pack.reduce((sum, q, i) => sum + Math.round(q.xp * (statuses[i]?.scoreFraction ?? 0)), 0);
 
   return (
-    <SafeAreaView style={styles.root}>
-      {/* Pyodide boots in the background from the moment this screen mounts,
-          so it's usually ready before the user finishes reading the intro. */}
+    <SafeAreaView style={styles.root} edges={['left', 'right', 'top']}>
       <PyodideRunner ref={pyodideRef} onReadyChange={setPyodideReady} />
 
       {phase === 'intro' && (
-        <View style={styles.introContainer}>
-          <View style={styles.headerBox}>
-            <View style={styles.introBadge}>
-              <Ionicons name="terminal-outline" size={wp(8.5)} color="#FFFFFF" />
-            </View>
-            <Text style={styles.introTitle}>{INTERVIEW_META.title}</Text>
-            <Text style={styles.introSubtitle}>{INTERVIEW_META.subtitle}</Text>
-          </View>
-
-          <View style={styles.rulesBox}>
-            {INTERVIEW_META.rules.map((rule: any, i: any) => (
-              <View key={i} style={styles.ruleRow}>
-                <View style={styles.ruleBullet} />
-                <Text style={styles.ruleText}>{rule}</Text>
+        <ScrollView
+          showsVerticalScrollIndicator={false}>
+          <View style={styles.introContainer}>
+            <View style={styles.headerBox}>
+              <View style={styles.introBadge}>
+                <Ionicons name="terminal-outline" size={wp(8.5)} color="#FFFFFF" />
               </View>
-            ))}
-          </View>
+              <Text style={styles.introTitle}>{INTERVIEW_META.title}</Text>
+              <Text style={styles.introSubtitle}>{INTERVIEW_META.subtitle}</Text>
+            </View>
 
-          <TouchableOpacity style={styles.startBtn} onPress={startInterview} activeOpacity={0.85}>
-            <Text style={styles.startBtnText}>Start the Interview</Text>
-            <Ionicons name="arrow-forward" size={wp(4.5)} color="#050505" />
-          </TouchableOpacity>
-        </View>
+            <View style={styles.rulesBox}>
+              {INTERVIEW_META.rules.map((rule: any, i: any) => (
+                <View key={i} style={styles.ruleRow}>
+                  <View style={styles.ruleBullet} />
+                  <Text style={styles.ruleText}>{rule}</Text>
+                </View>
+              ))}
+            </View>
+
+            <TouchableOpacity style={styles.startBtn} onPress={startInterview} activeOpacity={0.85}>
+              <Text style={styles.startBtnText}>Start the Interview</Text>
+              <Ionicons name="arrow-forward" size={wp(4.5)} color="#050505" />
+            </TouchableOpacity>
+            <BannerAdComponent_Challenge />
+          </View>
+        </ScrollView>
       )}
 
       {phase === 'interview' && currentChallenge && (

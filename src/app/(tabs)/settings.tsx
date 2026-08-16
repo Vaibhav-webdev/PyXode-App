@@ -1,3 +1,4 @@
+import BannerAdComponent from '@/components/ads/BannerAdsComponents';
 import { useSettings } from '@/context/SwitchContext';
 import { SoundManager } from '@/hooks/SoundManager';
 import { hp, wp } from '@/utils/wp_hp';
@@ -6,7 +7,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { LogOut } from "lucide-react-native";
 import { useEffect, useState } from 'react';
-import BannerAdComponent from '@/components/ads/BannerAdsComponents';
 import {
   Modal,
   ScrollView,
@@ -14,7 +14,6 @@ import {
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   TouchableOpacity, Vibration, View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -244,7 +243,6 @@ const SettingsScreen = () => {
             </View>
           </TouchableOpacity>
         </View>
-
         <BannerAdComponent />
       </ScrollView>
     </SafeAreaView>

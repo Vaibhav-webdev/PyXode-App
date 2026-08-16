@@ -4,14 +4,14 @@ import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads'
 
 const bannerAdUnitId = __DEV__ 
   ? TestIds.BANNER 
-  : 'ca-app-pub-2990397099587279/8350076921';
+  : 'ca-app-pub-2990397099587279/8039843909';
 
-export default function BannerAdComponent() {
+export default function BannerAdComponent_CodeRunner() {
   return (
-    <View style={{ alignItems: 'center', marginVertical: 10 }}>
+    <View style={{ alignItems: 'center' }}>
       <BannerAd
         unitId={bannerAdUnitId}
-        size={BannerAdSize.MEDIUM_RECTANGLE}
+        size={BannerAdSize.BANNER}
         requestOptions={{
           requestNonPersonalizedAdsOnly: true,
         }}

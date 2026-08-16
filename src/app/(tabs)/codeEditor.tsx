@@ -10,7 +10,8 @@ import {
   RotateCcw,
   Trash2,
 } from "lucide-react-native";
-import { useRef, useState } from "react";
+import { InterstitialAd, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+import { useRef, useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -27,6 +28,10 @@ import { WebView } from "react-native-webview";
 import { wp, hp } from "@/utils/wp_hp";
 import { useSettings } from '@/context/SwitchContext';
 import { Vibration } from 'react-native';
+import BannerAdComponent_CodeRunner from "@/components/ads/BannerAdsComponents_4";
+
+const interstitialAdUnitId = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-2990397099587279/1426213951';
+const interstitial = InterstitialAd.createForAdRequest(interstitialAdUnitId, { requestNonPersonalizedAdsOnly: true, });
 
 const INITIAL_PYTHON_CODE = `# Python Program
 
@@ -127,7 +132,6 @@ export default function CodeEditorScreen() {
   const { vibrationEnabled } = useSettings()
   const webViewRef = useRef<WebView>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const router = useRouter()
 
   const handleResetCode = async () => {
@@ -300,9 +304,12 @@ export default function CodeEditorScreen() {
     }
   };
 
-  const handleRunCode = async () => {
-    await SoundManager.play('correct')
-    if (vibrationEnabled) Vibration.vibrate(300)
+  const [loaded, setLoaded] = useState<boolean>(false);
+  const executeCodeRef = useRef<(() => Promise<void>) | null>(null);
+
+  const executeCode = async (): Promise<void> => {
+    await SoundManager.play('correct');
+    if (vibrationEnabled) Vibration.vibrate(300);
     if (!isEngineReady || isRunning) return;
 
     setIsConsoleVisible(true);
@@ -315,52 +322,85 @@ export default function CodeEditorScreen() {
       timeoutRef.current = null;
     }, 30000);
 
-    const jsonCode = JSON.stringify(code);
+    const jsonCode: string = JSON.stringify(code);
 
-    const js = `
-      (async function() {
-        if (!pyodide) {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'ERROR',
-            error: 'Python engine not loaded yet.'
-          }));
-          return;
-        }
+    const js: string = `
+    (async function() {
+      if (!pyodide) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'ERROR',
+          error: 'Python engine not loaded yet.'
+        }));
+        return;
+      }
 
-        var partialOut = '';
-        var startTime = performance.now();
-        try {
-          pyodide.runPython('import sys, io; sys.stdout = io.StringIO()');
-          await pyodide.runPythonAsync(${jsonCode});
-          var stdout = pyodide.runPython('sys.stdout.getvalue()');
-          pyodide.runPython('sys.stdout = sys.__stdout__');
-          
-          var endTime = performance.now();
-          var execTime = ((endTime - startTime) / 1000).toFixed(3);
+      var partialOut = '';
+      var startTime = performance.now();
+      try {
+        pyodide.runPython('import sys, io; sys.stdout = io.StringIO()');
+        await pyodide.runPythonAsync(${jsonCode});
+        var stdout = pyodide.runPython('sys.stdout.getvalue()');
+        pyodide.runPython('sys.stdout = sys.__stdout__');
+        
+        var endTime = performance.now();
+        var execTime = ((endTime - startTime) / 1000).toFixed(3);
 
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'OUTPUT',
-            output: stdout || 'Code executed successfully (No output).',
-            execTime: execTime
-          }));
-        } catch (err) {
-          try { partialOut = pyodide.runPython('sys.stdout.getvalue()'); } catch(e) {}
-          try { pyodide.runPython('sys.stdout = sys.__stdout__'); } catch(e) {}
-          
-          var endTime = performance.now();
-          var execTime = ((endTime - startTime) / 1000).toFixed(3);
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'OUTPUT',
+          output: stdout || 'Code executed successfully (No output).',
+          execTime: execTime
+        }));
+      } catch (err) {
+        try { partialOut = pyodide.runPython('sys.stdout.getvalue()'); } catch(e) {}
+        try { pyodide.runPython('sys.stdout = sys.__stdout__'); } catch(e) {}
+        
+        var endTime = performance.now();
+        var execTime = ((endTime - startTime) / 1000).toFixed(3);
 
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'ERROR',
-            error: (partialOut ? partialOut + '\\n' : '') + err.message,
-            execTime: execTime
-          }));
-        }
-      })();
-      true;
-    `;
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'ERROR',
+          error: (partialOut ? partialOut + '\\n' : '') + (err as Error).message,
+          execTime: execTime
+        }));
+      }
+    })();
+    true;
+  `;
 
     webViewRef.current?.injectJavaScript(js);
+  };
+
+  // Ref ke andar function instance sync karein
+  executeCodeRef.current = executeCode;
+
+  // 2. Ad Event Listeners
+  useEffect(() => {
+    const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+      setLoaded(true);
+    });
+
+    const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+      setLoaded(false);
+      // Optional chaining ke saath safe execution
+      executeCodeRef.current?.();
+      interstitial.load();
+    });
+
+    interstitial.load();
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeClosed();
+    };
+  }, []);
+
+  // 3. Button Handler
+  const handleRunCode = (): void => {
+    if (loaded) {
+      interstitial.show();
+    } else {
+      executeCode();
+    }
   };
 
   return (
@@ -413,6 +453,7 @@ export default function CodeEditorScreen() {
         )}
       </View>
 
+      <BannerAdComponent_CodeRunner />
       {/* Custom Editor Area */}
       <View style={styles.editorWrapper}>
         {/* Mobile Quick Action Symbol Bar */}
@@ -600,307 +641,307 @@ const FONT_SIZE = wp(3.5);
 
 const styles = StyleSheet.create({
   container: {
-      flex: 1,
-      backgroundColor: "#000000",
-    },
+    flex: 1,
+    backgroundColor: "#000000",
+  },
 
-    // Header Styles
-    header: {
-      height: hp(7),                // 56 -> ~7%
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingHorizontal: wp(4),     // 16 -> ~4%
-      backgroundColor: "#000000",
-    },
-    headerTitleContainer: {
-      alignItems: "center",
-    },
-    fileTitleRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: wp(1.5),                 // 6 -> ~1.5%
-    },
-    headerTitle: {
-      color: "#FFFFFF",
-      fontSize: wp(4),              // 16 -> ~4%
-      fontWeight: "600",
-    },
-    savedStatusRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginTop: hp(0.25),          // 2 -> ~0.25%
-      gap: wp(1),                   // 4 -> ~1%
-    },
-    
-    // Dropdown Menu Styles
-    dropdownMenu: {
-      zIndex: 1,
-      position: "absolute",
-      top: hp(4.5),                 // 36 -> ~4.5%
-      right: 0,
-      backgroundColor: "#1C1C1E",
-      borderRadius: wp(2),          // 8 -> ~2%
-      paddingVertical: hp(0.75),    // 6 -> ~0.75%
-      width: wp(30),                // 120 -> ~30%
-      borderWidth: 1,               // Fixed
-      borderColor: "#2C2C2E",
-      elevation: 10,                // Fixed
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 }, // Fixed
-      shadowOpacity: 0.3,           // Fixed
-      shadowRadius: 4,              // Fixed
-    },
-    menuItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: wp(2.5),                 // 10 -> ~2.5%
-      paddingHorizontal: wp(3),     // 12 -> ~3%
-      paddingVertical: hp(1),       // 8 -> ~1%
-    },
-    menuItemText: {
-      color: "#FFFFFF",
-      fontSize: wp(3.5),            // 14 -> ~3.5%
-      fontWeight: "500",
-    },
-    menuDivider: {
-      height: 1,                    // Fixed (divider line)
-      backgroundColor: "#2C2C2E",
-      marginVertical: hp(0.25),     // 2 -> ~0.25%
-    },
+  // Header Styles
+  header: {
+    height: hp(7),                // 56 -> ~7%
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: wp(4),     // 16 -> ~4%
+    backgroundColor: "#000000",
+  },
+  headerTitleContainer: {
+    alignItems: "center",
+  },
+  fileTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp(1.5),                 // 6 -> ~1.5%
+  },
+  headerTitle: {
+    color: "#FFFFFF",
+    fontSize: wp(4),              // 16 -> ~4%
+    fontWeight: "600",
+  },
+  savedStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: hp(0.25),          // 2 -> ~0.25%
+    gap: wp(1),                   // 4 -> ~1%
+  },
 
-    // Mobile Quick Action Toolbar Styles
-    toolbarContainer: {
-      height: hp(5),                // 40 -> ~5%
-      backgroundColor: "#121212",
-      borderBottomWidth: 1,         // Fixed
-      borderBottomColor: "#1C1C1E",
-    },
-    toolbarScroll: {
-      alignItems: "center",
-      paddingHorizontal: wp(2),     // 8 -> ~2%
-      gap: wp(2),                   // 8 -> ~2%
-    },
-    toolbarButton: {
-      backgroundColor: "#1C1C1E",
-      paddingHorizontal: wp(3),     // 12 -> ~3%
-      paddingVertical: hp(0.5),     // 4 -> ~0.5%
-      borderRadius: wp(1.5),        // 6 -> ~1.5%
-      borderWidth: 1,               // Fixed
-      borderColor: "#2C2C2E",
-    },
-    toolbarText: {
-      color: "#E5E5EA",
-      fontSize: wp(3.2),            // 13 -> ~3.2%
-      fontFamily: FONT_FAMILY,      // Ensure FONT_FAMILY is defined
-      fontWeight: "600",
-    },
-    savedDot: {
-      width: wp(1.5),               // 6 -> ~1.5% (Circle)
-      height: wp(1.5),              // 6 -> ~1.5%
-      borderRadius: wp(0.75),       // Half of width
-      backgroundColor: "#8E8E93",
-    },
-    savedText: {
-      color: "#8E8E93",
-      fontSize: wp(3),              // 12 -> ~3%
-    },
-    iconButton: {
-      padding: wp(1.5),             // 6 -> ~1.5%
-    },
+  // Dropdown Menu Styles
+  dropdownMenu: {
+    zIndex: 1,
+    position: "absolute",
+    top: hp(4.5),                 // 36 -> ~4.5%
+    right: 0,
+    backgroundColor: "#1C1C1E",
+    borderRadius: wp(2),          // 8 -> ~2%
+    paddingVertical: hp(0.75),    // 6 -> ~0.75%
+    width: wp(30),                // 120 -> ~30%
+    borderWidth: 1,               // Fixed
+    borderColor: "#2C2C2E",
+    elevation: 10,                // Fixed
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Fixed
+    shadowOpacity: 0.3,           // Fixed
+    shadowRadius: 4,              // Fixed
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp(2.5),                 // 10 -> ~2.5%
+    paddingHorizontal: wp(3),     // 12 -> ~3%
+    paddingVertical: hp(1),       // 8 -> ~1%
+  },
+  menuItemText: {
+    color: "#FFFFFF",
+    fontSize: wp(3.5),            // 14 -> ~3.5%
+    fontWeight: "500",
+  },
+  menuDivider: {
+    height: 1,                    // Fixed (divider line)
+    backgroundColor: "#2C2C2E",
+    marginVertical: hp(0.25),     // 2 -> ~0.25%
+  },
 
-    // Editor Wrapper
-    editorWrapper: {
-      flex: 1,
-      position: "relative",
-      backgroundColor: "#000000",
-    },
-    editorScroll: {
-      flex: 1,
-    },
-    editorRow: {
-      flexDirection: "row",
-      paddingTop: hp(1.2),          // 10 -> ~1.2%
-    },
+  // Mobile Quick Action Toolbar Styles
+  toolbarContainer: {
+    height: hp(5),                // 40 -> ~5%
+    backgroundColor: "#121212",
+    borderBottomWidth: 1,         // Fixed
+    borderBottomColor: "#1C1C1E",
+  },
+  toolbarScroll: {
+    alignItems: "center",
+    paddingHorizontal: wp(2),     // 8 -> ~2%
+    gap: wp(2),                   // 8 -> ~2%
+  },
+  toolbarButton: {
+    backgroundColor: "#1C1C1E",
+    paddingHorizontal: wp(3),     // 12 -> ~3%
+    paddingVertical: hp(0.5),     // 4 -> ~0.5%
+    borderRadius: wp(1.5),        // 6 -> ~1.5%
+    borderWidth: 1,               // Fixed
+    borderColor: "#2C2C2E",
+  },
+  toolbarText: {
+    color: "#E5E5EA",
+    fontSize: wp(3.2),            // 13 -> ~3.2%
+    fontFamily: FONT_FAMILY,      // Ensure FONT_FAMILY is defined
+    fontWeight: "600",
+  },
+  savedDot: {
+    width: wp(1.5),               // 6 -> ~1.5% (Circle)
+    height: wp(1.5),              // 6 -> ~1.5%
+    borderRadius: wp(0.75),       // Half of width
+    backgroundColor: "#8E8E93",
+  },
+  savedText: {
+    color: "#8E8E93",
+    fontSize: wp(3),              // 12 -> ~3%
+  },
+  iconButton: {
+    padding: wp(1.5),             // 6 -> ~1.5%
+  },
 
-    // Line Numbers Gutter
-    lineNumberGutter: {
-      width: wp(11),                // 44 -> ~11%
-      alignItems: "flex-end",
-      paddingRight: wp(3),          // 12 -> ~3%
-      borderRightWidth: 1,          // Fixed
-      borderRightColor: "#1C1C1E",
-    },
-    lineNumberText: {
-      color: "#48484A",
-      fontSize: FONT_SIZE,          // Responsive Variable
-      fontFamily: FONT_FAMILY,
-      lineHeight: LINE_HEIGHT,      // Responsive Variable
-    },
+  // Editor Wrapper
+  editorWrapper: {
+    flex: 1,
+    position: "relative",
+    backgroundColor: "#000000",
+  },
+  editorScroll: {
+    flex: 1,
+  },
+  editorRow: {
+    flexDirection: "row",
+    paddingTop: hp(1.2),          // 10 -> ~1.2%
+  },
 
-    // Dual Overlay Code Container
-    horizontalCodeScroll: {
-      flex: 1,
-      paddingLeft: wp(2.5),         // 10 -> ~2.5%
-    },
-    codeContainer: {
-      position: "relative",
-      minWidth: wp(105),            // 420 -> ~105% (Intentionally wider than screen to allow horizontal scroll for long code lines)
-    },
-    textInputLayer: {
-      fontSize: FONT_SIZE,          // Responsive Variable
-      fontFamily: FONT_FAMILY,
-      lineHeight: LINE_HEIGHT,      // Responsive Variable
-      color: "transparent",
-      textAlignVertical: "top",
-      padding: 0,                   // Fixed (0 padding is necessary for code overlay alignment)
-      margin: 0,                    // Fixed
-      includeFontPadding: false,
-      zIndex: 1,
-    },
-    highlightLayer: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      fontSize: FONT_SIZE,          // Responsive Variable
-      fontFamily: FONT_FAMILY,
-      lineHeight: LINE_HEIGHT,      // Responsive Variable
-      color: "#D4D4D4",
-      textAlignVertical: "top",
-      padding: 0,                   // Fixed
-      margin: 0,                    // Fixed
-      includeFontPadding: false,
-      zIndex: 2,
-    },
+  // Line Numbers Gutter
+  lineNumberGutter: {
+    width: wp(11),                // 44 -> ~11%
+    alignItems: "flex-end",
+    paddingRight: wp(3),          // 12 -> ~3%
+    borderRightWidth: 1,          // Fixed
+    borderRightColor: "#1C1C1E",
+  },
+  lineNumberText: {
+    color: "#48484A",
+    fontSize: FONT_SIZE,          // Responsive Variable
+    fontFamily: FONT_FAMILY,
+    lineHeight: LINE_HEIGHT,      // Responsive Variable
+  },
 
-    // Syntax Highlighting Colors
-    synComment: { color: "#6A9955", fontStyle: "italic" },
-    synString: { color: "#CE9178" },
-    synKeyword: { color: "#C586C0", fontWeight: "bold" },
-    synBuiltin: { color: "#4EC9B0" },
-    synNumber: { color: "#B5CEA8" },
-    synDefault: { color: "#D4D4D4" },
+  // Dual Overlay Code Container
+  horizontalCodeScroll: {
+    flex: 1,
+    paddingLeft: wp(2.5),         // 10 -> ~2.5%
+  },
+  codeContainer: {
+    position: "relative",
+    minWidth: wp(105),            // 420 -> ~105% (Intentionally wider than screen to allow horizontal scroll for long code lines)
+  },
+  textInputLayer: {
+    fontSize: FONT_SIZE,          // Responsive Variable
+    fontFamily: FONT_FAMILY,
+    lineHeight: LINE_HEIGHT,      // Responsive Variable
+    color: "transparent",
+    textAlignVertical: "top",
+    padding: 0,                   // Fixed (0 padding is necessary for code overlay alignment)
+    margin: 0,                    // Fixed
+    includeFontPadding: false,
+    zIndex: 1,
+  },
+  highlightLayer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    fontSize: FONT_SIZE,          // Responsive Variable
+    fontFamily: FONT_FAMILY,
+    lineHeight: LINE_HEIGHT,      // Responsive Variable
+    color: "#D4D4D4",
+    textAlignVertical: "top",
+    padding: 0,                   // Fixed
+    margin: 0,                    // Fixed
+    includeFontPadding: false,
+    zIndex: 2,
+  },
 
-    // Floating Run Button
-    floatingRunButton: {
-      position: "absolute",
-      bottom: hp(3),                // 24 -> ~3%
-      right: wp(5),                 // 20 -> ~5%
-      backgroundColor: "#FFFFFF",
-      paddingHorizontal: wp(5),     // 20 -> ~5%
-      paddingVertical: hp(1.5),     // 12 -> ~1.5%
-      borderRadius: wp(7),          // 28 -> ~7%
-      elevation: 5,                 // Fixed
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      zIndex: 10,
-    },
-    disabledRunButton: {
-      backgroundColor: "#8E8E93",
-    },
-    runButtonContent: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: wp(2),                   // 8 -> ~2%
-    },
-    runButtonText: {
-      color: "#000000",
-      fontWeight: "bold",
-      fontSize: wp(3.7),            // 15 -> ~3.7%
-    },
+  // Syntax Highlighting Colors
+  synComment: { color: "#6A9955", fontStyle: "italic" },
+  synString: { color: "#CE9178" },
+  synKeyword: { color: "#C586C0", fontWeight: "bold" },
+  synBuiltin: { color: "#4EC9B0" },
+  synNumber: { color: "#B5CEA8" },
+  synDefault: { color: "#D4D4D4" },
 
-    // Hidden WebView
-    hiddenWebView: {
-      height: 0,                    // Fixed (Hidden element)
-      width: 0,                     // Fixed
-      position: "absolute",
-    },
+  // Floating Run Button
+  floatingRunButton: {
+    position: "absolute",
+    bottom: hp(3),                // 24 -> ~3%
+    right: wp(5),                 // 20 -> ~5%
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: wp(5),     // 20 -> ~5%
+    paddingVertical: hp(1.5),     // 12 -> ~1.5%
+    borderRadius: wp(7),          // 28 -> ~7%
+    elevation: 5,                 // Fixed
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 10,
+  },
+  disabledRunButton: {
+    backgroundColor: "#8E8E93",
+  },
+  runButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp(2),                   // 8 -> ~2%
+  },
+  runButtonText: {
+    color: "#000000",
+    fontWeight: "bold",
+    fontSize: wp(3.7),            // 15 -> ~3.7%
+  },
 
-    // Console Output Bottom Sheet
-    outputSheet: {
-      height: "38%",                // String % best for bottom sheets
-      backgroundColor: "#0A0A0A",
-      borderTopLeftRadius: wp(4),   // 16 -> ~4%
-      borderTopRightRadius: wp(4),  // 16 -> ~4%
-      paddingHorizontal: wp(4),     // 16 -> ~4%
-      paddingTop: hp(1),            // 8 -> ~1%
-      paddingBottom: hp(2),         // 16 -> ~2%
-      borderTopWidth: 1,            // Fixed
-      borderTopColor: "#1A1A1A",
-    },
-    dragHandle: {
-      width: wp(9),                 // 36 -> ~9%
-      height: wp(1),                // 4 -> ~1% (Using wp to keep it proportional)
-      backgroundColor: "#3A3A3C",
-      borderRadius: wp(0.5),        // 2 -> ~0.5%
-      alignSelf: "center",
-      marginBottom: hp(1.2),        // 10 -> ~1.2%
-    },
-    sheetHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      borderBottomWidth: 1,         // Fixed
-      borderBottomColor: "#1A1A1A",
-      paddingBottom: hp(1),         // 8 -> ~1%
-    },
-    tabContainer: {
-      flexDirection: "row",
-      gap: wp(4),                   // 16 -> ~4%
-    },
-    tab: {
-      paddingVertical: hp(0.5),     // 4 -> ~0.5%
-    },
-    activeTab: {
-      borderBottomWidth: 2,         // Fixed
-      borderBottomColor: "#FFFFFF",
-    },
-    tabText: {
-      color: "#6C6C70",
-      fontSize: wp(3.5),            // 14 -> ~3.5%
-      fontWeight: "500",
-    },
-    activeTabText: {
-      color: "#FFFFFF",
-      fontWeight: "600",
-    },
-    sheetActions: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: wp(4),                   // 16 -> ~4%
-    },
-    sheetActionButton: {
-      padding: wp(0.5),             // 2 -> ~0.5%
-    },
-    consoleContainer: {
-      flex: 1,
-      marginTop: hp(1.5),           // 12 -> ~1.5%
-    },
-    terminalBox: {
-      flex: 1,
-    },
-    outputText: {
-      color: "#E5E5EA",
-      fontFamily: FONT_FAMILY,
-      fontSize: wp(3.5),            // 14 -> ~3.5%
-      lineHeight: wp(5.5),          // 22 -> ~5.5%
-    },
-    statusFooter: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: wp(2),                   // 8 -> ~2%
-      marginTop: hp(1),             // 8 -> ~1%
-      paddingTop: hp(1),            // 8 -> ~1%
-      borderTopWidth: 1,            // Fixed
-      borderTopColor: "#1C1C1E",
-    },
-    statusText: {
-      color: "#8E8E93",
-      fontSize: wp(3),              // 12 -> ~3%
-      fontFamily: FONT_FAMILY,
-    },
+  // Hidden WebView
+  hiddenWebView: {
+    height: 0,                    // Fixed (Hidden element)
+    width: 0,                     // Fixed
+    position: "absolute",
+  },
+
+  // Console Output Bottom Sheet
+  outputSheet: {
+    height: "38%",                // String % best for bottom sheets
+    backgroundColor: "#0A0A0A",
+    borderTopLeftRadius: wp(4),   // 16 -> ~4%
+    borderTopRightRadius: wp(4),  // 16 -> ~4%
+    paddingHorizontal: wp(4),     // 16 -> ~4%
+    paddingTop: hp(1),            // 8 -> ~1%
+    paddingBottom: hp(2),         // 16 -> ~2%
+    borderTopWidth: 1,            // Fixed
+    borderTopColor: "#1A1A1A",
+  },
+  dragHandle: {
+    width: wp(9),                 // 36 -> ~9%
+    height: wp(1),                // 4 -> ~1% (Using wp to keep it proportional)
+    backgroundColor: "#3A3A3C",
+    borderRadius: wp(0.5),        // 2 -> ~0.5%
+    alignSelf: "center",
+    marginBottom: hp(1.2),        // 10 -> ~1.2%
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 1,         // Fixed
+    borderBottomColor: "#1A1A1A",
+    paddingBottom: hp(1),         // 8 -> ~1%
+  },
+  tabContainer: {
+    flexDirection: "row",
+    gap: wp(4),                   // 16 -> ~4%
+  },
+  tab: {
+    paddingVertical: hp(0.5),     // 4 -> ~0.5%
+  },
+  activeTab: {
+    borderBottomWidth: 2,         // Fixed
+    borderBottomColor: "#FFFFFF",
+  },
+  tabText: {
+    color: "#6C6C70",
+    fontSize: wp(3.5),            // 14 -> ~3.5%
+    fontWeight: "500",
+  },
+  activeTabText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  sheetActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp(4),                   // 16 -> ~4%
+  },
+  sheetActionButton: {
+    padding: wp(0.5),             // 2 -> ~0.5%
+  },
+  consoleContainer: {
+    flex: 1,
+    marginTop: hp(1.5),           // 12 -> ~1.5%
+  },
+  terminalBox: {
+    flex: 1,
+  },
+  outputText: {
+    color: "#E5E5EA",
+    fontFamily: FONT_FAMILY,
+    fontSize: wp(3.5),            // 14 -> ~3.5%
+    lineHeight: wp(5.5),          // 22 -> ~5.5%
+  },
+  statusFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp(2),                   // 8 -> ~2%
+    marginTop: hp(1),             // 8 -> ~1%
+    paddingTop: hp(1),            // 8 -> ~1%
+    borderTopWidth: 1,            // Fixed
+    borderTopColor: "#1C1C1E",
+  },
+  statusText: {
+    color: "#8E8E93",
+    fontSize: wp(3),              // 12 -> ~3%
+    fontFamily: FONT_FAMILY,
+  },
 });
