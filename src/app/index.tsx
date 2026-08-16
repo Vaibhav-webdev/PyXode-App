@@ -4,8 +4,8 @@ import { Redirect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Index() {
-  const [isReady, setIsReady] = useState(false);
-  const [route, setRoute] = useState(''); // Kahan redirect karna hai wo store karega
+  const [isReady, setIsReady] = useState<boolean>(false);
+  const [route, setRoute] = useState<any>(''); // Kahan redirect karna hai wo store karega
 
   useEffect(() => {
     const checkUserStatus = async () => {
